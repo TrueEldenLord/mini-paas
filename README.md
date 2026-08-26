@@ -8,6 +8,21 @@ Think of it as a mini Heroku — running entirely on your own machine.
 
 ---
 
+## Accessing the Project
+
+1. **Get added to the repo** — ask the repo owner to add you as a collaborator at:
+   `github.com/TrueEldenLord/mini-paas → Settings → Collaborators`
+
+2. **Clone it locally**
+   ```bash
+   git clone https://github.com/TrueEldenLord/mini-paas.git
+   cd mini-paas
+   ```
+
+3. **Navigate to your component folder** and read the README inside it — each folder has its own setup instructions, packages, and tasks specific to that role.
+
+---
+
 ## How It Works
 
 ```
@@ -39,25 +54,36 @@ Developer → React Dashboard → FastAPI → PostgreSQL
 ## Project Structure
 
 ```
-/api            — FastAPI backend (control plane + data layer)
-/build-service  — git clone, docker build, image push logic
-/dashboard      — React frontend
-/infra          — Docker Compose, Traefik config
-/tests          — Integration and end-to-end tests
+/api            — FastAPI backend (control plane + data layer)     → Role 1
+/build-service  — git clone, docker build, image push              → Role 2
+/dashboard      — React frontend                                   → Roles 4, 5, 6
+/infra          — Docker Compose, Traefik config                   → Role 3
+/tests          — Integration and end-to-end tests                 → Everyone
 ```
+
+Each folder has its own README with setup steps, packages to install, and task breakdown for that role.
 
 ---
 
-## Team Roles
+## Team Roles & Tasks
 
-| Role | Owns |
-|---|---|
-| API & Data Layer | FastAPI endpoints, PostgreSQL schema, deployment records |
-| Build Service | git clone, docker build, image push, status updates |
-| Container Scheduler & Networking | Docker Swarm, Traefik routing, container lifecycle |
-| Deployment List & Submit Form | Main dashboard page, submit form, status polling |
-| Deployment Detail View | Per-deployment logs, status, live URL link |
-| API Integration & Shared State | API client layer, shared state, TypeScript types |
+### Backend
+
+| Role | Owner | Folder |
+|---|---|---|
+| Role 1 — API & Data Layer | TBD | `/api` |
+| Role 2 — Build Service | TBD | `/build-service` |
+| Role 3 — Container Scheduler & Networking | TBD | `/infra` |
+
+### Frontend
+
+| Role | Owner | Folder |
+|---|---|---|
+| Role 4 — Deployment List & Submit Form | TBD | `/dashboard` |
+| Role 5 — Deployment Detail View | TBD | `/dashboard` |
+| Role 6 — API Integration & Shared State | TBD | `/dashboard` |
+
+> Replace "TBD" with your name once roles are assigned.
 
 ---
 
@@ -70,27 +96,46 @@ Developer → React Dashboard → FastAPI → PostgreSQL
 
 ---
 
-## Getting Started
+## Required Software (Install Before Anything Else)
 
-> Prerequisites: Docker, Docker Compose, Python 3.11+, Node.js 18+
+Everyone on the team needs these regardless of role:
 
-```bash
-# Clone the repo
-git clone https://github.com/TrueEldenLord/mini-paas.git
-cd mini-paas
+| Tool | Install |
+|---|---|
+| Git | [git-scm.com](https://git-scm.com) |
+| Docker Desktop | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop) |
+| VS Code | [code.visualstudio.com](https://code.visualstudio.com) |
+| Python 3.11+ | [python.org/downloads](https://www.python.org/downloads) |
+| Node.js 18+ | [nodejs.org](https://nodejs.org) |
 
-# Start the full stack locally
-docker compose -f infra/docker-compose.yml up
-```
-
-More detailed setup instructions coming as each component is built out.
+Then check your component's README for role-specific packages.
 
 ---
 
-## Contributing
+## Git Workflow
 
-Each team member owns a specific component — see the role table above. Branch off `main`, keep PRs focused to your component, and open a pull request when ready for review.
+Branch off `main` for every piece of work. Keep branches scoped to your component.
 
+```bash
+# Create your branch
+git checkout -b yourname/what-youre-building
+
+# Stage and commit your work
+git add .
+git commit -m "short description of what you did"
+
+# Push and open a pull request
+git push origin yourname/what-youre-building
 ```
-git checkout -b your-name/feature-description
-```
+
+Open a pull request on GitHub when you're ready for review. Don't push directly to `main`.
+
+---
+
+## Further Reading
+
+- `/api/README.md` — Role 1 setup and tasks
+- `/build-service/README.md` — Role 2 setup and tasks
+- `/infra/README.md` — Role 3 setup and tasks
+- `/dashboard/README.md` — Roles 4, 5, and 6 setup and tasks
+- `/tests/README.md` — How to run the test suite
