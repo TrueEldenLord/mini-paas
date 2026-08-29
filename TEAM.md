@@ -20,11 +20,11 @@ git push
 
 ## Members
 
-| Name | GitHub Username | Role |
-|---|---|---|
-| Alex | TrueEldenLord | Project Lead |
-| | | |
-| | | |
-| | | |
-| | | |
-| | | |
+| Name         | GitHub Username | Role         |
+| ------------ | --------------- | ------------ |
+| Alex Sanchez | TrueEldenLord   | Project Lead |
+|              |                 |              |
+|              |                 |              |
+|              |                 |              |
+|              |                 |              |
+|              |                 |              |
