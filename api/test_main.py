@@ -35,7 +35,7 @@ def test_update_status_invalid():
     create_response = client.post("/deployments", json={"repo_url": "https://github.com/test/repo2"})
     deployment_id = create_response.json()["id"]
 
-    response = client.patch(f"/deployments/{deployment_id}/status", params={"status": "banana"})
+    response = client.patch(f"/deployments/{deployment_id}/status", json={"status": "banana"})
     assert response.status_code == 400
 
 
@@ -43,7 +43,7 @@ def test_update_status_valid():
     create_response = client.post("/deployments", json={"repo_url": "https://github.com/test/repo3"})
     deployment_id = create_response.json()["id"]
 
-    response = client.patch(f"/deployments/{deployment_id}/status", params={"status": "building"})
+    response = client.patch(f"/deployments/{deployment_id}/status", json={"status": "building"})
     assert response.status_code == 200
     assert response.json()["status"] == "building"
 

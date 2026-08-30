@@ -1,11 +1,11 @@
 import uuid
+import logging
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import engine, Base, SessionLocal
 import models
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("minipaas")
@@ -37,9 +37,14 @@ class DeploymentCreate(BaseModel):
     repo_url: str
 
 
+class StatusUpdate(BaseModel):
+    status: str
+
+
 @app.get("/")
 def read_root():
     return {"status": "API is alive"}
+
 
 @app.get("/health")
 def health_check():
@@ -80,7 +85,8 @@ def delete_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @app.patch("/deployments/{deployment_id}/status")
-def update_status(deployment_id: uuid.UUID, status: str, db: Session = Depends(get_db)):
+def update_status(deployment_id: uuid.UUID, body: StatusUpdate, db: Session = Depends(get_db)):
+    status = body.status
     if status not in VALID_STATUSES:
         raise HTTPException(
             status_code=400,
@@ -89,8 +95,7 @@ def update_status(deployment_id: uuid.UUID, status: str, db: Session = Depends(g
     deployment = db.query(models.Deployment).filter(models.Deployment.id == deployment_id).first()
     if deployment is None:
         raise HTTPException(status_code=404, detail="Deployment not found")
-    
-        deployment.status = status
+    deployment.status = status
     db.commit()
     db.refresh(deployment)
     logger.info(f"Deployment {deployment.id} status changed to {status}")
