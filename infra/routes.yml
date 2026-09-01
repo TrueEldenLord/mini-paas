@@ -1,0 +1,10 @@
+http:
+  routers:
+    sample-app:
+      rule: "Host(`test.localhost`)"
+      service: sample-app
+  services:
+    sample-app:
+      loadBalancer:
+        servers:
+          - url: "http://sample-app:8000"

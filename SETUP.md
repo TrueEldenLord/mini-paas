@@ -129,7 +129,53 @@ If prompted to install WSL 2, say yes and follow the steps. Open Docker Desktop 
 
 ---
 
-## Step 7 — Go to Your Component Folder
+## Step 7 — Run the Phase 1 Stack (Verify Everything Works)
+
+This step confirms Docker and Traefik are working correctly on your machine.
+
+### 1. Add `test.localhost` to your hosts file (one-time, requires your password)
+
+**Mac:**
+```bash
+echo "127.0.0.1 test.localhost" | sudo tee -a /etc/hosts
+```
+
+**Windows** (run PowerShell as Administrator):
+```powershell
+Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "127.0.0.1 test.localhost"
+```
+
+### 2. Start the stack
+
+```bash
+cd "Mini Paas/infra"
+docker compose up --build
+```
+
+Wait for both containers to show as running. You'll see Flask output like `Running on http://0.0.0.0:8000`.
+
+### 3. Verify in browser
+
+Open **http://test.localhost** in your browser.
+
+You should see: **"Hello from Team Helios!"**
+
+If it loads, Phase 1 is verified on your machine. Hit `Ctrl+C` to stop.
+
+### Troubleshooting
+
+**"docker compose: command not found"**
+Close your terminal and reopen it after installing Docker Desktop. Docker needs a fresh terminal session to be recognized.
+
+**"http://test.localhost" shows "Safari can't find the server"**
+You haven't added the hosts file entry yet. Run the command in Step 1 above.
+
+**"404 page not found"**
+The containers are running but Traefik isn't routing correctly. Run `docker compose down` then `docker compose up --build` again from the `infra/` folder.
+
+---
+
+## Step 8 — Go to Your Component Folder
 
 Navigate to your role's folder and read the README inside — it has the specific packages to install and the tasks you're responsible for.
 
