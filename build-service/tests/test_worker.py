@@ -6,6 +6,18 @@ import docker
 import worker
 
 
+@pytest.fixture(autouse=True)
+def restore_worker_registry_globals():
+    """Restore worker module globals after each test that mutates them."""
+    original_registry_type = worker.REGISTRY_TYPE
+    original_dockerhub_username = worker.DOCKERHUB_USERNAME
+    original_local_registry_url = worker.LOCAL_REGISTRY_URL
+    yield
+    worker.REGISTRY_TYPE = original_registry_type
+    worker.DOCKERHUB_USERNAME = original_dockerhub_username
+    worker.LOCAL_REGISTRY_URL = original_local_registry_url
+
+
 def test_get_queued_deployments_filters_status():
     mock_resp = MagicMock()
     mock_resp.json.return_value = [
@@ -224,3 +236,20 @@ def test_poll_calls_process_for_each_queued_deployment():
     assert mock_process.call_count == 2
     mock_process.assert_any_call({"id": "aaa", "status": "queued"})
     mock_process.assert_any_call({"id": "bbb", "status": "queued"})
+
+
+def test_process_api_failure_during_error_reporting_does_not_raise():
+    """If the API is down when reporting a failure, process() should log and continue, not raise."""
+    import git as git_module
+    deployment = {"id": "deploy-123", "repo_url": "https://github.com/bad/repo.git"}
+    with patch("worker.update_status") as mock_status, \
+         patch("worker.clone_repo",
+               side_effect=git_module.exc.GitCommandError("clone", 128)), \
+         patch("worker.update_logs",
+               side_effect=Exception("API unreachable")), \
+         patch("worker.shutil.rmtree"):
+        # Should not raise even though update_logs fails
+        worker.process(deployment)
+    # update_status("building") was called, then the clone failed,
+    # then update_status("failed") was called but update_logs raised — no exception propagated
+    mock_status.assert_any_call("deploy-123", "building")

@@ -16,6 +16,11 @@ REGISTRY_TYPE = os.environ["REGISTRY_TYPE"]
 DOCKERHUB_USERNAME = os.environ.get("DOCKERHUB_USERNAME", "")
 LOCAL_REGISTRY_URL = os.environ.get("LOCAL_REGISTRY_URL", "")
 
+if REGISTRY_TYPE not in ("dockerhub", "local"):
+    raise ValueError(
+        f"REGISTRY_TYPE must be 'dockerhub' or 'local', got '{REGISTRY_TYPE}'"
+    )
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("build-service")
 
@@ -95,8 +100,13 @@ def process(deployment):
         error_msg = f"{type(exc).__name__}: {exc}"
         log_lines.append(error_msg)
         logger.error(f"Deployment {deployment_id} failed: {error_msg}")
-        update_status(deployment_id, "failed")
-        update_logs(deployment_id, "\n".join(log_lines))
+        try:
+            update_status(deployment_id, "failed")
+            update_logs(deployment_id, "\n".join(log_lines))
+        except Exception as report_exc:
+            logger.error(
+                f"Deployment {deployment_id}: could not report failure to API: {report_exc}"
+            )
 
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
