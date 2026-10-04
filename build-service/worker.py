@@ -102,5 +102,17 @@ def process(deployment):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
+def poll():
+    logger.info(f"Build service started. Polling every {POLL_INTERVAL}s")
+    while True:
+        try:
+            for deployment in get_queued_deployments():
+                logger.info(f"Processing deployment {deployment['id']}")
+                process(deployment)
+        except Exception as exc:
+            logger.error(f"Poll error: {exc}")
+        time.sleep(POLL_INTERVAL)
+
+
 if __name__ == "__main__":
-    logger.info("Build service starting...")
+    poll()

@@ -200,3 +200,27 @@ def test_process_build_failure_marks_failed():
     mock_status.assert_any_call("deploy-123", "failed")
     mock_push.assert_not_called()
     assert mock_logs.called
+
+
+def test_poll_calls_process_for_each_queued_deployment():
+    queued = [
+        {"id": "aaa", "status": "queued"},
+        {"id": "bbb", "status": "queued"},
+    ]
+    call_count = {"n": 0}
+
+    def fake_get_queued():
+        call_count["n"] += 1
+        if call_count["n"] > 1:
+            raise SystemExit
+        return queued
+
+    with patch("worker.get_queued_deployments", side_effect=fake_get_queued), \
+         patch("worker.process") as mock_process, \
+         patch("worker.time.sleep"):
+        with pytest.raises(SystemExit):
+            worker.poll()
+
+    assert mock_process.call_count == 2
+    mock_process.assert_any_call({"id": "aaa", "status": "queued"})
+    mock_process.assert_any_call({"id": "bbb", "status": "queued"})
