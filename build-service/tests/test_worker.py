@@ -43,3 +43,21 @@ def test_update_logs_calls_correct_endpoint():
         "http://localhost:8000/deployments/abc-123/logs",
         json={"logs": "build output here"},
     )
+
+
+def test_clone_repo_calls_gitpython():
+    with patch("worker.git.Repo.clone_from") as mock_clone:
+        worker.clone_repo("https://github.com/user/repo.git", "/tmp/abc")
+    mock_clone.assert_called_once_with(
+        "https://github.com/user/repo.git", "/tmp/abc"
+    )
+
+
+def test_clone_repo_propagates_git_error():
+    import git as git_module
+    with patch(
+        "worker.git.Repo.clone_from",
+        side_effect=git_module.exc.GitCommandError("clone", 128),
+    ):
+        with pytest.raises(git_module.exc.GitCommandError):
+            worker.clone_repo("https://github.com/bad/repo.git", "/tmp/abc")

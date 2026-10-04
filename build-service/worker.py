@@ -42,5 +42,9 @@ def update_logs(deployment_id, logs):
     response.raise_for_status()
 
 
+def clone_repo(repo_url, dest_path):
+    git.Repo.clone_from(repo_url, dest_path)
+
+
 if __name__ == "__main__":
     logger.info("Build service starting...")
