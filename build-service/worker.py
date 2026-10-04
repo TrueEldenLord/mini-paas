@@ -46,5 +46,18 @@ def clone_repo(repo_url, dest_path):
     git.Repo.clone_from(repo_url, dest_path)
 
 
+def build_image(repo_path, deployment_id):
+    client = docker.from_env()
+    tag = f"mini-paas:{deployment_id}"
+    _, logs = client.images.build(path=repo_path, tag=tag, rm=True)
+    lines = []
+    for chunk in logs:
+        if "stream" in chunk:
+            line = chunk["stream"].strip()
+            if line:
+                lines.append(line)
+    return lines
+
+
 if __name__ == "__main__":
     logger.info("Build service starting...")

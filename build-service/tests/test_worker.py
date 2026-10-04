@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
+import docker
+
 import worker
 
 
@@ -61,3 +63,30 @@ def test_clone_repo_propagates_git_error():
     ):
         with pytest.raises(git_module.exc.GitCommandError):
             worker.clone_repo("https://github.com/bad/repo.git", "/tmp/abc")
+
+
+def test_build_image_returns_log_lines():
+    mock_client = MagicMock()
+    mock_logs = iter([
+        {"stream": "Step 1/3 : FROM python:3.11\n"},
+        {"stream": "Step 2/3 : COPY . .\n"},
+        {"stream": "\n"},          # empty — should be filtered
+        {"other_key": "ignored"},  # no "stream" key — should be ignored
+    ])
+    mock_client.images.build.return_value = (MagicMock(), mock_logs)
+    with patch("worker.docker.from_env", return_value=mock_client):
+        logs = worker.build_image("/tmp/abc", "deploy-123")
+    assert logs == ["Step 1/3 : FROM python:3.11", "Step 2/3 : COPY . ."]
+    mock_client.images.build.assert_called_once_with(
+        path="/tmp/abc", tag="mini-paas:deploy-123", rm=True
+    )
+
+
+def test_build_image_raises_on_build_error():
+    mock_client = MagicMock()
+    mock_client.images.build.side_effect = docker.errors.BuildError(
+        "build failed", []
+    )
+    with patch("worker.docker.from_env", return_value=mock_client):
+        with pytest.raises(docker.errors.BuildError):
+            worker.build_image("/tmp/abc", "deploy-123")
