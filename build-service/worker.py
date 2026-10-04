@@ -59,5 +59,17 @@ def build_image(repo_path, deployment_id):
     return lines
 
 
+def push_image(deployment_id):
+    client = docker.from_env()
+    local_tag = f"mini-paas:{deployment_id}"
+    if REGISTRY_TYPE == "dockerhub":
+        remote_tag = f"{DOCKERHUB_USERNAME}/mini-paas:{deployment_id}"
+    else:
+        remote_tag = f"{LOCAL_REGISTRY_URL}/mini-paas:{deployment_id}"
+    image = client.images.get(local_tag)
+    image.tag(remote_tag)
+    client.images.push(remote_tag)
+
+
 if __name__ == "__main__":
     logger.info("Build service starting...")

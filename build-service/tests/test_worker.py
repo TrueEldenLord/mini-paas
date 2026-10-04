@@ -90,3 +90,41 @@ def test_build_image_raises_on_build_error():
     with patch("worker.docker.from_env", return_value=mock_client):
         with pytest.raises(docker.errors.BuildError):
             worker.build_image("/tmp/abc", "deploy-123")
+
+
+def test_push_image_dockerhub():
+    mock_client = MagicMock()
+    worker.REGISTRY_TYPE = "dockerhub"
+    worker.DOCKERHUB_USERNAME = "testuser"
+    with patch("worker.docker.from_env", return_value=mock_client):
+        worker.push_image("deploy-123")
+    mock_client.images.get.assert_called_once_with("mini-paas:deploy-123")
+    mock_client.images.get.return_value.tag.assert_called_once_with(
+        "testuser/mini-paas:deploy-123"
+    )
+    mock_client.images.push.assert_called_once_with("testuser/mini-paas:deploy-123")
+
+
+def test_push_image_local_registry():
+    mock_client = MagicMock()
+    worker.REGISTRY_TYPE = "local"
+    worker.LOCAL_REGISTRY_URL = "localhost:5000"
+    with patch("worker.docker.from_env", return_value=mock_client):
+        worker.push_image("deploy-123")
+    mock_client.images.get.assert_called_once_with("mini-paas:deploy-123")
+    mock_client.images.get.return_value.tag.assert_called_once_with(
+        "localhost:5000/mini-paas:deploy-123"
+    )
+    mock_client.images.push.assert_called_once_with(
+        "localhost:5000/mini-paas:deploy-123"
+    )
+
+
+def test_push_image_raises_on_api_error():
+    mock_client = MagicMock()
+    worker.REGISTRY_TYPE = "dockerhub"
+    worker.DOCKERHUB_USERNAME = "testuser"
+    mock_client.images.push.side_effect = docker.errors.APIError("push failed")
+    with patch("worker.docker.from_env", return_value=mock_client):
+        with pytest.raises(docker.errors.APIError):
+            worker.push_image("deploy-123")
