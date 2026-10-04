@@ -71,5 +71,36 @@ def push_image(deployment_id):
     client.images.push(remote_tag)
 
 
+def process(deployment):
+    deployment_id = deployment["id"]
+    repo_url = deployment["repo_url"]
+    tmp_dir = f"/tmp/{deployment_id}"
+    log_lines = []
+
+    try:
+        update_status(deployment_id, "building")
+        clone_repo(repo_url, tmp_dir)
+
+        if not os.path.exists(os.path.join(tmp_dir, "Dockerfile")):
+            raise FileNotFoundError("No Dockerfile found at repo root")
+
+        log_lines = build_image(tmp_dir, deployment_id)
+        push_image(deployment_id)
+
+        update_status(deployment_id, "running")
+        update_logs(deployment_id, "\n".join(log_lines))
+        logger.info(f"Deployment {deployment_id} succeeded")
+
+    except Exception as exc:
+        error_msg = f"{type(exc).__name__}: {exc}"
+        log_lines.append(error_msg)
+        logger.error(f"Deployment {deployment_id} failed: {error_msg}")
+        update_status(deployment_id, "failed")
+        update_logs(deployment_id, "\n".join(log_lines))
+
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     logger.info("Build service starting...")

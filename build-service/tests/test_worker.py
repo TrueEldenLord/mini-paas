@@ -128,3 +128,75 @@ def test_push_image_raises_on_api_error():
     with patch("worker.docker.from_env", return_value=mock_client):
         with pytest.raises(docker.errors.APIError):
             worker.push_image("deploy-123")
+
+
+def test_process_happy_path():
+    deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
+    with patch("worker.update_status") as mock_status, \
+         patch("worker.clone_repo") as mock_clone, \
+         patch("worker.os.path.exists", return_value=True), \
+         patch("worker.build_image", return_value=["Step 1", "Step 2"]) as mock_build, \
+         patch("worker.push_image") as mock_push, \
+         patch("worker.update_logs") as mock_logs, \
+         patch("worker.shutil.rmtree") as mock_rm:
+        worker.process(deployment)
+
+    mock_status.assert_any_call("deploy-123", "building")
+    mock_status.assert_any_call("deploy-123", "running")
+    mock_clone.assert_called_once_with(
+        "https://github.com/user/repo.git", "/tmp/deploy-123"
+    )
+    mock_build.assert_called_once_with("/tmp/deploy-123", "deploy-123")
+    mock_push.assert_called_once_with("deploy-123")
+    mock_logs.assert_called_once_with("deploy-123", "Step 1\nStep 2")
+    mock_rm.assert_called_once_with("/tmp/deploy-123", ignore_errors=True)
+
+
+def test_process_clone_failure_marks_failed_and_cleans_up():
+    import git as git_module
+    deployment = {"id": "deploy-123", "repo_url": "https://github.com/bad/repo.git"}
+    with patch("worker.update_status") as mock_status, \
+         patch("worker.clone_repo",
+               side_effect=git_module.exc.GitCommandError("clone", 128)), \
+         patch("worker.update_logs") as mock_logs, \
+         patch("worker.shutil.rmtree") as mock_rm:
+        worker.process(deployment)
+
+    mock_status.assert_any_call("deploy-123", "building")
+    mock_status.assert_any_call("deploy-123", "failed")
+    mock_rm.assert_called_once_with("/tmp/deploy-123", ignore_errors=True)
+    logs_written = mock_logs.call_args[0][1]
+    assert "GitCommandError" in logs_written
+
+
+def test_process_no_dockerfile_marks_failed():
+    deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
+    with patch("worker.update_status") as mock_status, \
+         patch("worker.clone_repo"), \
+         patch("worker.os.path.exists", return_value=False), \
+         patch("worker.build_image") as mock_build, \
+         patch("worker.update_logs") as mock_logs, \
+         patch("worker.shutil.rmtree"):
+        worker.process(deployment)
+
+    mock_status.assert_any_call("deploy-123", "failed")
+    mock_build.assert_not_called()
+    logs_written = mock_logs.call_args[0][1]
+    assert "No Dockerfile" in logs_written
+
+
+def test_process_build_failure_marks_failed():
+    deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
+    with patch("worker.update_status") as mock_status, \
+         patch("worker.clone_repo"), \
+         patch("worker.os.path.exists", return_value=True), \
+         patch("worker.build_image",
+               side_effect=docker.errors.BuildError("build failed", [])), \
+         patch("worker.update_logs") as mock_logs, \
+         patch("worker.push_image") as mock_push, \
+         patch("worker.shutil.rmtree"):
+        worker.process(deployment)
+
+    mock_status.assert_any_call("deploy-123", "failed")
+    mock_push.assert_not_called()
+    assert mock_logs.called
