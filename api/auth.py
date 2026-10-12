@@ -1,12 +1,16 @@
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from passlib.context import CryptContext
 from jose import jwt, JWTError
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security_scheme = HTTPBearer()
+# Same as above, but doesn't fail on its own when the header is missing
+optional_security_scheme = HTTPBearer(auto_error=False)
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
@@ -29,3 +33,20 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(secu
         return payload.get("sub")
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+def get_current_caller(
+    x_service_api_key: Optional[str] = Header(default=None),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security_scheme),
+) -> str:
+    """Accepts EITHER a valid user JWT (dashboard) OR a valid
+    X-Service-API-Key header (build service / scheduler)."""
+    if x_service_api_key is not None:
+        expected = os.getenv("SERVICE_API_KEY")
+        if expected and secrets.compare_digest(x_service_api_key, expected):
+            return "service"
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid service API key")
+
+    if credentials is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    return get_current_user_id(credentials)
