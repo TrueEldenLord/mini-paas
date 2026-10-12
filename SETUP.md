@@ -203,7 +203,45 @@ Reinstall Python and check "Add Python to PATH".
 Follow the WSL 2 install guide that Docker Desktop links to — takes about 5 minutes.
 
 **"rejected" error when pushing**
-Someone pushed before you. Run `git pull` first, then push again.
+Someone pushed to the same branch before you. You need to pull their changes before Git will let you push yours. Pick one of the options below based on your situation.
+
+**Option 1 — You haven't started any work yet (safest)**
+Just pull and you're done:
+```bash
+git pull
+```
+If this fails or you're unsure, message Alex.
+
+**Option 2 — You have local changes you haven't committed**
+Discard your local changes and pull:
+```bash
+git reset --hard HEAD
+git pull
+```
+> ⚠️ This permanently deletes any uncommitted changes.
+
+**Option 3 — You want to keep your local changes**
+Stash your changes, pull, then restore:
+```bash
+git stash
+git pull
+git stash pop
+```
+> ⚠️ `git stash pop` can fail if the pull brought in files with the same names as your stashed changes. If you see an error, message Alex.
+> Alternatively, commit your changes before pulling:
+> ```bash
+> git add .
+> git commit -m "wip: saving changes before pull"
+> git pull
+> ```
+
+**Option 4 — Nothing else worked (nuclear option)**
+Reset your branch to match the remote exactly:
+```bash
+git reset --hard origin/<your-branch>
+```
+Replace `<your-branch>` with your actual branch name (e.g. `origin/alex/build-service`).
+> ⚠️ This permanently deletes all uncommitted changes **and any local commits that haven't been pushed yet.**
 
 ---
 
