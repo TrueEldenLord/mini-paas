@@ -99,8 +99,8 @@ def process(deployment):
         log_lines = build_image(tmp_dir, deployment_id)
         push_image(deployment_id)
 
-        update_status(deployment_id, "running")
         update_logs(deployment_id, "\n".join(log_lines))
+        update_status(deployment_id, "running")
         logger.info(f"Deployment {deployment_id} succeeded")
 
     except Exception as exc:
