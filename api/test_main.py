@@ -173,3 +173,11 @@ def test_service_key_cannot_create_or_delete():
         f"/deployments/{deployment_id}", headers=SERVICE_HEADERS)
     assert r_create.status_code in (401, 403)
     assert r_delete.status_code in (401, 403)
+
+
+def test_service_key_not_configured_fails_loudly(monkeypatch):
+    monkeypatch.delenv("SERVICE_API_KEY", raising=False)
+    response = client.get(
+        "/deployments", headers={"X-Service-API-Key": "anything"})
+    assert response.status_code == 500
+    assert response.json()["detail"] == "SERVICE_API_KEY not configured"
