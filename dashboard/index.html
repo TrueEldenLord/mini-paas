@@ -1,11 +1,181 @@
-<HTML>
-<HEAD>
-<META NAME="GENERATOR" Content="Microsoft Visual Studio">
-<TITLE></TITLE>
-</HEAD>
-<BODY>
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard</title>
+
+    <!-- create stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- left menu -->
+    <aside class="sidebar">
+
+        <div class="dashboard-logo">
+            <h2>Dashboard</h2>
+        </div>
+
+        <div class="user-profile">
+            <p>email profile</p>
+        </div>
+
+        <div class="favorites">
+            <h3>FAVORITES</h3>
+
+            <ul>
+                <li class="active">blog</li>
+                <li> xxx </li>
+                <li> xxx </li>
+                <li> xxx </li>
+                <li> xxx </li>
+                <li> xxx </li>
+                <li> xxx </li>
+                <li> xxx </li>
+                <li> xxx</li>
+            </ul>
+        </div>
+
+        <div class="personal-apps">
+            <h3>Personal Apps</h3>
+        </div>
+
+        <div class="organizations">
+            <h3>ORGANIZATIONS</h3>
+            <p>HELIOS</p>
+        </div>
+
+    </aside>
 
 
+    <!-- main body -->
+    <main class="main-content">
 
-</BODY>
-</HTML>
+        <!-- TOP HEADER -->
+        <header class="top-header">
+
+            <div class="back-button">
+                &lt;
+            </div>
+
+            <div class="app-name">
+                hit
+            </div>
+
+            <div class="header-right">
+                blog
+            </div>
+
+        </header>
+
+
+        <!-- navigation -->
+        <nav class="navigation">
+
+            <a href="#">Resources</a>
+            <a href="#">Code</a>
+            <a href="#" class="active">Metrics</a>
+            <a href="#">Activity</a>
+            <a href="#">Access</a>
+            <a href="#">Settings</a>
+
+        </nav>
+
+
+        <!-- status card section -->
+        <section class="status-cards">
+
+            <div class="status-card web-card">
+
+                <div class="card-header">
+                    <h3>WEB</h3>
+                    <span class="status-indicator">✓</span>
+                </div>
+
+                <div class="card-content">
+                    <span class="count">2X</span>
+                    <span>9 dynos</span>
+                </div>
+
+            </div>
+
+
+            <div class="status-card worker-card">
+
+                <div class="card-header">
+                    <h3>WORKER</h3>
+                    <span class="status-indicator">✓</span>
+                </div>
+
+                <div class="card-content">
+                    <span class="count">1X</span>
+                    <span>0 dynos</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- app alerts-->
+        <section class="app-alerts">
+
+            <h3>App Alerts</h3>
+
+            <div class="alert-message">
+                <strong>■ Request timeouts.</strong>
+                Alert message input here API
+            </div>
+
+        </section>
+
+
+        <!-- errors -->
+        <section class="metrics-section">
+
+            <h3>Errors</h3>
+
+            <div class="chart" id="errors-chart">
+
+                <!-- chart for errors -->
+                <p>Error chart will go here</p>
+
+            </div>
+
+        </section>
+
+
+        <!-- == -->
+        <section class="metrics-section">
+
+            <h3>Response Time</h3>
+
+            <div class="chart-legend">
+
+                <span> <== api ==> </span>
+                <span> <== api ==> </span>
+
+            </div>
+
+            <div class="chart" id="response-chart">
+
+                <!-- response time chart-->
+                <p>response time code chart<p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- input js -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>
