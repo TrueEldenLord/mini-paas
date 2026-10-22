@@ -4,6 +4,56 @@ Base URL (local dev): `http://localhost:8000`
 
 ---
 
+## Authentication
+
+Every deployment endpoint requires credentials. There are two kinds, depending on who is calling:
+
+| Caller | Credential | Header |
+|---|---|---|
+| Humans (dashboard) | JWT from `POST /auth/login` | `Authorization: Bearer <access-token>` |
+| Services (build service, scheduler) | Shared service API key | `X-Service-API-Key: <key>` |
+
+`POST /auth/register` and `POST /auth/login` are public.
+
+### Which endpoints accept which credential
+
+| Endpoint | User JWT | Service key |
+|---|---|---|
+| `GET /deployments` | yes | yes |
+| `PATCH /deployments/{id}/status` | yes | yes |
+| `PATCH /deployments/{id}/logs` | yes | yes |
+| `GET /deployments/{id}` | yes | no |
+| `POST /deployments` | yes | no |
+| `DELETE /deployments/{id}` | yes | no |
+
+### Auth errors
+
+All return HTTP `401`:
+
+```json
+{ "detail": "Not authenticated" }
+```
+
+No credentials were sent.
+
+```json
+{ "detail": "Invalid or expired token" }
+```
+
+The JWT is invalid or expired.
+
+```json
+{ "detail": "Invalid service API key" }
+```
+
+The `X-Service-API-Key` header was sent but doesn't match.
+
+### Service key setup
+
+The key is set in each service's `.env` file as `SERVICE_API_KEY`. It must match the value in the API's `.env`. Never commit it. Get it from Endri privately.
+
+---
+
 ## Deployment Object
 
 All endpoints that return a deployment use this shape:
@@ -37,75 +87,202 @@ All endpoints that return a deployment use this shape:
 ## Endpoints
 
 ### `GET /`
+
 Health check. Returns:
+
 ```json
 { "status": "API is alive" }
 ```
 
 ---
 
-### `POST /deployments`
+### `GET /health`
+
+Dedicated health check endpoint. Returns:
+
+```json
+{ "status": "healthy" }
+```
+
+---
+
+### `POST /auth/register` (public)
+
+Creates a new user account.
+
+**Request body:**
+
+```json
+{
+  "email": "you@example.com",
+  "username": "yourname",
+  "password": "yourpassword"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "id": "c133fa7e-7ec7-4dc1-8840-e171e7fd2fde",
+  "email": "you@example.com",
+  "username": "yourname"
+}
+```
+
+**Response (400):** if the email is already registered
+
+```json
+{ "detail": "Email already registered" }
+```
+
+---
+
+### `POST /auth/login` (public)
+
+Logs in and returns a JWT access token (valid for 24 hours).
+
+**Request body:**
+
+```json
+{
+  "email": "you@example.com",
+  "password": "yourpassword"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer"
+}
+```
+
+**Response (401):** if the email or password is wrong
+
+```json
+{ "detail": "Invalid credentials" }
+```
+
+---
+
+### `POST /deployments` 🔒 (user JWT only)
+
 Creates a new deployment with status `queued`.
 
 **Request body:**
+
 ```json
 { "repo_url": "https://github.com/octocat/Hello-World" }
 ```
 
 **Response (200):** a full Deployment object (see above)
 
+**Response (401):** missing/invalid token
+
 **Response (422):** validation error if `repo_url` is missing/invalid
 
 ---
 
-### `GET /deployments`
-Returns a list of all deployments.
+### `GET /deployments` 🔒 (user JWT or service key)
+
+Returns a list of deployments. Supports pagination via `skip` and `limit` query parameters (default `skip=0`, `limit=20`).
+
+The build service uses this endpoint and filters for `"status": "queued"`.
 
 **Response (200):**
+
 ```json
 [
-  { "id": "...", "repo_url": "...", "status": "queued", ... },
-  { "id": "...", "repo_url": "...", "status": "running", ... }
+  { "id": "...", "repo_url": "...", "status": "queued", "...": "..." },
+  { "id": "...", "repo_url": "...", "status": "running", "...": "..." }
 ]
 ```
 
 ---
 
-### `GET /deployments/{id}`
+### `GET /deployments/{id}` 🔒 (user JWT only)
+
 Returns a single deployment by ID.
 
 **Response (200):** a full Deployment object
 
 **Response (404):**
+
 ```json
 { "detail": "Deployment not found" }
 ```
 
 ---
 
-### `DELETE /deployments/{id}`
+### `DELETE /deployments/{id}` 🔒 (user JWT only)
+
 Deletes a deployment record.
 
 **Response (200):**
+
 ```json
 { "message": "Deployment deleted" }
 ```
 
 **Response (404):**
+
 ```json
 { "detail": "Deployment not found" }
 ```
 
 ---
 
-### `PATCH /deployments/{id}/status`
-Updates a deployment's status. Used internally by Role 2/Role 3 to progress a deployment through its lifecycle. Automatically updates `updated_at`.
+### `PATCH /deployments/{id}/status` 🔒 (user JWT or service key)
 
-**Query parameter:** `status` (string) — one of `queued`, `building`, `running`, `failed`
+Updates a deployment's status. Used by Role 2 and Role 3 to move a deployment through its lifecycle.
+
+**Request body:**
+
+```json
+{ "status": "building" }
+```
+
+Must be one of: `queued`, `building`, `running`, `failed`.
+
+**Response (200):** the updated Deployment object
+
+**Response (400):** invalid status value
+
+```json
+{ "detail": "Invalid status 'banana'. Must be one of: failed, building, running, queued" }
+```
+
+**Response (404):**
+
+```json
+{ "detail": "Deployment not found" }
+```
+
+---
+
+### `PATCH /deployments/{id}/logs` 🔒 (user JWT or service key)
+
+Sets the build output logs for a deployment. Used by Role 2 (Build Service) to report build output. Replaces any existing logs and updates `updated_at`.
+
+**Request body:**
+
+```json
+{ "logs": "Step 1/5 : FROM python:3.11 ..." }
+```
 
 **Response (200):** the updated Deployment object
 
 **Response (404):**
+
 ```json
 { "detail": "Deployment not found" }
 ```
+
+**Response (422):** if `logs` is missing or not a string
+
+---
+
+🔒 = requires credentials (see the Authentication section for which kind)
