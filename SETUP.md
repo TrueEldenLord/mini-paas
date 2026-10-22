@@ -245,6 +245,15 @@ Replace `<your-branch>` with your actual branch name (e.g. `origin/alex/build-se
 
 ---
 
+**`/auth/register` or `/auth/login` returns a 500 error**
+This is a known incompatibility between `bcrypt 5.x` and `passlib`. It's fixed in `requirements.txt` (pinned to `bcrypt==4.0.1`), so as long as you install with `pip install -r requirements.txt` you won't hit it. If you're seeing it anyway, run:
+```bash
+pip install "bcrypt==4.0.1"
+```
+Then restart the API.
+
+---
+
 ## Need Help?
 
 Message Alex or open an issue at:
