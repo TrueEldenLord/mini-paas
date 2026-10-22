@@ -1,0 +1,391 @@
+﻿/* general */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #5f6070;
+    background: #ffffff;
+}
+
+
+/* left sidebar */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 100vh;
+    background: #2563a6;
+    color: white;
+    overflow-y: auto;
+}
+
+
+/* dashboard */
+
+.dashboard-logo {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    background: #1e518c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+    .dashboard-logo h2 {
+        font-size: 14px;
+        color: white;
+    }
+
+
+/* user profile */
+
+.user-profile {
+    height: 58px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+    .user-profile p {
+        color: white;
+        font-size: 13px;
+    }
+
+
+/* favorites */
+
+.favorites {
+    padding-top: 15px;
+}
+
+    .favorites h3 {
+        padding: 0 14px 8px;
+        color: #b8d4ee;
+        font-size: 9px;
+        font-weight: bold;
+    }
+
+    .favorites ul {
+        list-style: none;
+    }
+
+    .favorites li {
+        height: 25px;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        color: #e0edf8;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+        .favorites li::before {
+            content: "⬡";
+            margin-right: 7px;
+            color: #b8d4ee;
+            font-size: 11px;
+        }
+
+        .favorites li:hover {
+            background: #3478ba;
+        }
+
+        .favorites li.active {
+            background: #3b7fc4;
+            color: white;
+        }
+
+
+/* personal apps */
+
+.personal-apps {
+    margin-top: 18px;
+    padding: 0 14px;
+}
+
+    .personal-apps h3 {
+        color: white;
+        font-size: 12px;
+        font-weight: normal;
+    }
+
+
+/* organizations */
+
+.organizations {
+    margin-top: 22px;
+}
+
+    .organizations h3 {
+        padding: 0 14px 10px;
+        color: #b8d4ee;
+        font-size: 9px;
+    }
+
+    .organizations p {
+        padding: 8px 14px;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+
+/* main content */
+
+.main-content {
+    margin-left: 220px;
+    min-height: 100vh;
+    background: white;
+}
+
+
+/* top header */
+
+.top-header {
+    position: relative;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    border-bottom: 1px solid #e4e4e8;
+    background: white;
+}
+
+.back-button {
+    margin-right: 18px;
+    color: #77798a;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.app-name {
+    color: #555664;
+    font-size: 13px;
+}
+
+.header-right {
+    margin-left: auto;
+    color: #555664;
+    font-size: 12px;
+}
+
+
+/* navigation */
+
+.navigation {
+    height: 55px;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 35px;
+    border-bottom: 1px solid #e5e5e8;
+}
+
+    .navigation a {
+        position: relative;
+        display: flex;
+        align-items: center;
+        padding: 0 5px;
+        color: #737483;
+        font-size: 12px;
+        text-decoration: none;
+    }
+
+        .navigation a:hover {
+            color: #2f80c9;
+        }
+
+        .navigation a.active {
+            color: #2f80c9;
+        }
+
+            .navigation a.active::after {
+                content: "";
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background: #2f80c9;
+            }
+
+
+/* status cards */
+
+.status-cards {
+    display: flex;
+    gap: 14px;
+    padding: 25px 28px 20px;
+}
+
+.status-card {
+    width: 190px;
+    height: 58px;
+    padding: 8px 10px;
+    border: 1px solid #3478ba;
+    border-radius: 3px;
+    background: #f3f8fc;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+    .card-header h3 {
+        font-size: 11px;
+        font-weight: bold;
+    }
+
+.status-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #72bf74;
+    color: white;
+    font-size: 9px;
+}
+
+.card-content {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 7px;
+    font-size: 11px;
+}
+
+.count {
+    padding: 2px 4px;
+    border-radius: 2px;
+    background: rgba(37, 99, 166, 0.15);
+    font-size: 9px;
+}
+
+
+/* webcard */
+
+.web-card {
+    background: #2563a6;
+    color: white;
+}
+
+    .web-card .count {
+        background: rgba(255, 255, 255, 0.18);
+    }
+
+
+/* worker */
+
+.worker-card {
+    color: #55566b;
+}
+
+
+/* app alerts*/
+
+.app-alerts {
+    padding: 0 28px 25px;
+}
+
+    .app-alerts h3 {
+        margin-bottom: 14px;
+        color: #686977;
+        font-size: 12px;
+        font-weight: normal;
+    }
+
+.alert-message {
+    color: #686977;
+    font-size: 11px;
+}
+
+    .alert-message strong {
+        color: #555664;
+    }
+
+
+/* metrics */
+
+.metrics-section {
+    padding: 10px 28px 20px;
+}
+
+    .metrics-section h3 {
+        margin-bottom: 15px;
+        color: #777887;
+        font-size: 12px;
+        font-weight: normal;
+    }
+
+
+/* chart legend */
+
+.chart-legend {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 7px;
+    font-size: 8px;
+    color: #858696;
+}
+
+    .chart-legend span::before {
+        content: "●";
+        margin-right: 4px;
+        color: #2563a6;
+    }
+
+
+/* chart layout */
+
+.chart {
+    position: relative;
+    width: 100%;
+    height: 115px;
+    border-top: 1px solid #eeeeef;
+    border-bottom: 1px solid #eeeeef;
+    background: repeating-linear-gradient( to bottom, #ffffff 0px, #ffffff 27px, #eeeeef 28px );
+}
+
+    .chart p {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #aaa;
+        font-size: 11px;
+    }
+
+
+/* responsive layout */
+
+@media (max-width: 800px) {
+
+    .sidebar {
+        width: 180px;
+    }
+
+    .main-content {
+        margin-left: 180px;
+    }
+
+    .navigation {
+        gap: 15px;
+    }
+
+    .status-cards {
+        flex-wrap: wrap;
+    }
+}
