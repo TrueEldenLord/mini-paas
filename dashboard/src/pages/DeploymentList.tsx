@@ -1,9 +1,30 @@
 // Role 4 — Kayla
-// Your original HTML structure is preserved exactly below, just converted to JSX.
-// When you're ready to wire in real data, import useDeploymentStore and useNavigate
-// and swap out the hardcoded content.
+// Real data is now wired in. The sidebar favorites and status cards show live deployments.
+// The rest of the page (nav, alerts, charts) is yours to build out.
+
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDeploymentStore } from '../store/deployments';
+
+const POLL_INTERVAL = Number(import.meta.env.VITE_POLL_INTERVAL_MS) || 5000;
+
+const STATUS_COLORS: Record<string, string> = {
+  queued: '#9ca3af',
+  building: '#f59e0b',
+  running: '#72bf74',
+  failed: '#ef4444',
+};
 
 export default function DeploymentList() {
+  const { deployments, fetchDeployments } = useDeploymentStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDeployments();
+    const interval = setInterval(fetchDeployments, POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <>
       {/* left menu */}
@@ -20,15 +41,15 @@ export default function DeploymentList() {
         <div className="favorites">
           <h3>FAVORITES</h3>
           <ul>
-            <li className="active">blog</li>
-            <li> xxx </li>
-            <li> xxx </li>
-            <li> xxx </li>
-            <li> xxx </li>
-            <li> xxx </li>
-            <li> xxx </li>
-            <li> xxx </li>
-            <li> xxx</li>
+            {deployments.length === 0 ? (
+              <li>No deployments yet</li>
+            ) : (
+              deployments.slice(0, 8).map((d) => (
+                <li key={d.id} onClick={() => navigate(`/deployments/${d.id}`)}>
+                  {d.repo_url.split('/').pop()}
+                </li>
+              ))
+            )}
           </ul>
         </div>
 
@@ -63,31 +84,35 @@ export default function DeploymentList() {
           <a href="#">Settings</a>
         </nav>
 
-        {/* status card section */}
+        {/* status cards — live deployments */}
         <section className="status-cards">
-
-          <div className="status-card web-card">
-            <div className="card-header">
-              <h3>WEB</h3>
-              <span className="status-indicator">✓</span>
-            </div>
-            <div className="card-content">
-              <span className="count">2X</span>
-              <span>9 dynos</span>
-            </div>
-          </div>
-
-          <div className="status-card worker-card">
-            <div className="card-header">
-              <h3>WORKER</h3>
-              <span className="status-indicator">✓</span>
-            </div>
-            <div className="card-content">
-              <span className="count">1X</span>
-              <span>0 dynos</span>
-            </div>
-          </div>
-
+          {deployments.length === 0 ? (
+            <p style={{ color: '#9ca3af', fontSize: '12px', padding: '4px' }}>No deployments yet.</p>
+          ) : (
+            deployments.map((d) => (
+              <div
+                key={d.id}
+                className="status-card"
+                style={{ cursor: 'pointer', width: '220px', height: 'auto' }}
+                onClick={() => navigate(`/deployments/${d.id}`)}
+              >
+                <div className="card-header">
+                  <h3>{d.repo_url.split('/').pop()}</h3>
+                  <span
+                    className="status-indicator"
+                    style={{ background: STATUS_COLORS[d.status] ?? '#9ca3af', width: 'auto', padding: '0 5px', borderRadius: '3px', fontSize: '9px' }}
+                  >
+                    {d.status}
+                  </span>
+                </div>
+                <div className="card-content" style={{ marginTop: '6px' }}>
+                  <span style={{ fontSize: '10px', color: '#777', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {d.repo_url}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </section>
 
         {/* app alerts */}
