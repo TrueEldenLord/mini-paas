@@ -81,6 +81,21 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        {import.meta.env.DEV && (
+          <div style={{ marginTop: '16px', borderTop: '1px solid #e4e4e8', paddingTop: '14px' }}>
+            <p style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '8px' }}>Dev only</p>
+            <button
+              onClick={() => { setEmail('alex@test.com'); setPassword('testpass123'); }}
+              style={{
+                width: '100%', padding: '7px', background: 'transparent', color: '#9ca3af',
+                border: '1px dashed #d0d0d8', borderRadius: '3px', fontSize: '12px', cursor: 'pointer',
+              }}
+            >
+              Fill dev credentials
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
