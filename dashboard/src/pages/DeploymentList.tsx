@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function DeploymentList() {
-  const { deployments, fetchDeployments } = useDeploymentStore();
+  const { deployments, fetchDeployments, loading, error } = useDeploymentStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,7 +100,15 @@ export default function DeploymentList() {
 
         {/* status cards — live deployments */}
         <section className="status-cards">
-          {deployments.length === 0 ? (
+          {error && (
+            <p style={{ color: '#ef4444', fontSize: '12px', padding: '4px' }}>
+              Could not reach API — retrying…
+            </p>
+          )}
+          {!error && loading && deployments.length === 0 && (
+            <p style={{ color: '#9ca3af', fontSize: '12px', padding: '4px' }}>Loading…</p>
+          )}
+          {!error && !loading && deployments.length === 0 ? (
             <p style={{ color: '#9ca3af', fontSize: '12px', padding: '4px' }}>No deployments yet.</p>
           ) : (
             deployments.map((d) => (

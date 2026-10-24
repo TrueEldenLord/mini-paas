@@ -14,6 +14,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Retry up to 2 times on network errors or 5xx, with 1s delay between attempts
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    config._retryCount = config._retryCount ?? 0;
+    const isRetryable = !error.response || error.response.status >= 500;
+    if (isRetryable && config._retryCount < 2) {
+      config._retryCount += 1;
+      await new Promise((res) => setTimeout(res, 1000));
+      return api(config);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const register = (email: string, username: string, password: string): Promise<User> =>
   api.post('/auth/register', { email, username, password }).then((r) => r.data);
