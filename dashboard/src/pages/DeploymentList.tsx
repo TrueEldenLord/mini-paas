@@ -1,70 +1,125 @@
 // Role 4 — Kayla
-// This is your page. The sidebar/layout CSS is already in index.css (ported from your style.css).
-// Hook into useDeploymentStore to replace the hardcoded content with real data.
-
-import { useNavigate } from 'react-router-dom';
-import { useDeploymentStore } from '../store/deployments';
+// Your original HTML structure is preserved exactly below, just converted to JSX.
+// When you're ready to wire in real data, import useDeploymentStore and useNavigate
+// and swap out the hardcoded content.
 
 export default function DeploymentList() {
-  const { deployments } = useDeploymentStore();
-  const navigate = useNavigate();
-
   return (
-    <div style={{ display: 'flex' }}>
-
-      {/* Sidebar — from your original HTML */}
+    <>
+      {/* left menu */}
       <aside className="sidebar">
-        <div className="dashboard-logo"><h2>Dashboard</h2></div>
-        <div className="user-profile"><p>email profile</p></div>
+
+        <div className="dashboard-logo">
+          <h2>Dashboard</h2>
+        </div>
+
+        <div className="user-profile">
+          <p>email profile</p>
+        </div>
+
         <div className="favorites">
           <h3>FAVORITES</h3>
           <ul>
-            {deployments.slice(0, 8).map((d) => (
-              <li key={d.id} onClick={() => navigate(`/deployments/${d.id}`)}>
-                {d.repo_url.split('/').pop()}
-              </li>
-            ))}
+            <li className="active">blog</li>
+            <li> xxx </li>
+            <li> xxx </li>
+            <li> xxx </li>
+            <li> xxx </li>
+            <li> xxx </li>
+            <li> xxx </li>
+            <li> xxx </li>
+            <li> xxx</li>
           </ul>
         </div>
-        <div className="personal-apps"><h3>Personal Apps</h3></div>
+
+        <div className="personal-apps">
+          <h3>Personal Apps</h3>
+        </div>
+
         <div className="organizations">
           <h3>ORGANIZATIONS</h3>
           <p>HELIOS</p>
         </div>
+
       </aside>
 
-      {/* Main content */}
+      {/* main body */}
       <main className="main-content">
+
+        {/* TOP HEADER */}
         <header className="top-header">
           <div className="back-button">&lt;</div>
-          <div className="app-name">Deployments</div>
+          <div className="app-name">hit</div>
+          <div className="header-right">blog</div>
         </header>
 
+        {/* navigation */}
         <nav className="navigation">
-          <a href="#" className="active">Deployments</a>
+          <a href="#">Resources</a>
+          <a href="#">Code</a>
+          <a href="#" className="active">Metrics</a>
+          <a href="#">Activity</a>
+          <a href="#">Access</a>
+          <a href="#">Settings</a>
         </nav>
 
-        {/* Deployment list — replace this section with your full UI */}
+        {/* status card section */}
         <section className="status-cards">
-          {deployments.map((d) => (
-            <div
-              key={d.id}
-              className="status-card"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/deployments/${d.id}`)}
-            >
-              <div className="card-header">
-                <h3>{d.repo_url.split('/').pop()}</h3>
-                <span className="status-indicator">{d.status}</span>
-              </div>
-              <div className="card-content">
-                <span>{d.repo_url}</span>
-              </div>
-            </div>
-          ))}
-        </section>
-      </main>
 
-    </div>
+          <div className="status-card web-card">
+            <div className="card-header">
+              <h3>WEB</h3>
+              <span className="status-indicator">✓</span>
+            </div>
+            <div className="card-content">
+              <span className="count">2X</span>
+              <span>9 dynos</span>
+            </div>
+          </div>
+
+          <div className="status-card worker-card">
+            <div className="card-header">
+              <h3>WORKER</h3>
+              <span className="status-indicator">✓</span>
+            </div>
+            <div className="card-content">
+              <span className="count">1X</span>
+              <span>0 dynos</span>
+            </div>
+          </div>
+
+        </section>
+
+        {/* app alerts */}
+        <section className="app-alerts">
+          <h3>App Alerts</h3>
+          <div className="alert-message">
+            <strong>■ Request timeouts.</strong>
+            Alert message input here API
+          </div>
+        </section>
+
+        {/* errors */}
+        <section className="metrics-section">
+          <h3>Errors</h3>
+          <div className="chart" id="errors-chart">
+            <p>Error chart will go here</p>
+          </div>
+        </section>
+
+        {/* response time */}
+        <section className="metrics-section">
+          <h3>Response Time</h3>
+          <div className="chart-legend">
+            <span> &lt;== api ==&gt; </span>
+            <span> &lt;== api ==&gt; </span>
+          </div>
+          <div className="chart" id="response-chart">
+            <p>response time code chart</p>
+          </div>
+        </section>
+
+      </main>
+    </>
   );
 }
