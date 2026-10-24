@@ -6,6 +6,11 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDeploymentStore } from '../store/deployments';
 
+function logout(navigate: (path: string) => void) {
+  localStorage.removeItem('access_token');
+  navigate('/login');
+}
+
 const POLL_INTERVAL = Number(import.meta.env.VITE_POLL_INTERVAL_MS) || 5000;
 
 const STATUS_COLORS: Record<string, string> = {
@@ -34,8 +39,17 @@ export default function DeploymentList() {
           <h2>Dashboard</h2>
         </div>
 
-        <div className="user-profile">
+        <div className="user-profile" style={{ justifyContent: 'space-between' }}>
           <p>email profile</p>
+          <button
+            onClick={() => logout(navigate)}
+            style={{
+              background: 'none', border: 'none', color: '#b8d4ee',
+              fontSize: '11px', cursor: 'pointer', padding: 0,
+            }}
+          >
+            Sign out
+          </button>
         </div>
 
         <div className="favorites">
