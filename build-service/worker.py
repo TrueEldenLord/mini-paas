@@ -15,6 +15,7 @@ POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL_SECONDS", "5"))
 REGISTRY_TYPE = os.environ["REGISTRY_TYPE"]
 DOCKERHUB_USERNAME = os.environ.get("DOCKERHUB_USERNAME", "")
 LOCAL_REGISTRY_URL = os.environ.get("LOCAL_REGISTRY_URL", "")
+SERVICE_API_KEY = os.environ["SERVICE_API_KEY"]
 
 if REGISTRY_TYPE not in ("dockerhub", "local"):
     raise ValueError(
@@ -25,8 +26,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("build-service")
 
 
+def _auth_headers():
+    return {"X-Service-API-Key": SERVICE_API_KEY}
+
+
 def get_queued_deployments():
-    response = requests.get(f"{API_URL}/deployments")
+    response = requests.get(f"{API_URL}/deployments", headers=_auth_headers())
     response.raise_for_status()
     return [d for d in response.json() if d["status"] == "queued"]
 
@@ -35,6 +40,7 @@ def update_status(deployment_id, status):
     response = requests.patch(
         f"{API_URL}/deployments/{deployment_id}/status",
         json={"status": status},
+        headers=_auth_headers(),
     )
     response.raise_for_status()
 
@@ -43,6 +49,7 @@ def update_logs(deployment_id, logs):
     response = requests.patch(
         f"{API_URL}/deployments/{deployment_id}/logs",
         json={"logs": logs},
+        headers=_auth_headers(),
     )
     response.raise_for_status()
 
@@ -92,8 +99,8 @@ def process(deployment):
         log_lines = build_image(tmp_dir, deployment_id)
         push_image(deployment_id)
 
-        update_status(deployment_id, "running")
         update_logs(deployment_id, "\n".join(log_lines))
+        update_status(deployment_id, "running")
         logger.info(f"Deployment {deployment_id} succeeded")
 
     except Exception as exc:

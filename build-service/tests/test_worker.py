@@ -18,6 +18,31 @@ def restore_worker_registry_globals():
     worker.LOCAL_REGISTRY_URL = original_local_registry_url
 
 
+def test_get_queued_deployments_sends_auth_header():
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = []
+    with patch("worker.requests.get", return_value=mock_resp) as mock_get:
+        worker.get_queued_deployments()
+    _, kwargs = mock_get.call_args
+    assert kwargs["headers"]["X-Service-API-Key"] == worker.SERVICE_API_KEY
+
+
+def test_update_status_sends_auth_header():
+    mock_resp = MagicMock()
+    with patch("worker.requests.patch", return_value=mock_resp) as mock_patch:
+        worker.update_status("abc-123", "building")
+    _, kwargs = mock_patch.call_args
+    assert kwargs["headers"]["X-Service-API-Key"] == worker.SERVICE_API_KEY
+
+
+def test_update_logs_sends_auth_header():
+    mock_resp = MagicMock()
+    with patch("worker.requests.patch", return_value=mock_resp) as mock_patch:
+        worker.update_logs("abc-123", "some logs")
+    _, kwargs = mock_patch.call_args
+    assert kwargs["headers"]["X-Service-API-Key"] == worker.SERVICE_API_KEY
+
+
 def test_get_queued_deployments_filters_status():
     mock_resp = MagicMock()
     mock_resp.json.return_value = [
@@ -46,6 +71,7 @@ def test_update_status_calls_correct_endpoint():
     mock_patch.assert_called_once_with(
         "http://localhost:8000/deployments/abc-123/status",
         json={"status": "building"},
+        headers={"X-Service-API-Key": worker.SERVICE_API_KEY},
     )
 
 
@@ -56,6 +82,7 @@ def test_update_logs_calls_correct_endpoint():
     mock_patch.assert_called_once_with(
         "http://localhost:8000/deployments/abc-123/logs",
         json={"logs": "build output here"},
+        headers={"X-Service-API-Key": worker.SERVICE_API_KEY},
     )
 
 
