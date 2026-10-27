@@ -1,138 +1,127 @@
 services:
-
   db:
     image: postgres:16-alpine
-
     environment:
       POSTGRES_DB: minipaas
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD}
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
     networks:
       - internal
-
     healthcheck:
       test:
         - CMD-SHELL
         - pg_isready -U postgres -d minipaas
-
       interval: 5s
       timeout: 5s
       retries: 10
-
     restart: unless-stopped
-
 
   api:
     image: python:3.12-slim
-
     working_dir: /app
-
     command:
       - sh
       - -c
       - >-
         pip install --no-cache-dir -r requirements.txt
         && uvicorn main:app --host 0.0.0.0 --port 8000
-
     environment:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/minipaas
       SERVICE_API_KEY: ${SERVICE_API_KEY:?Missing SERVICE_API_KEY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Missing JWT_SECRET_KEY}
-
     volumes:
       - ../api:/app:ro
-
     ports:
       - "127.0.0.1:8000:8000"
-
     depends_on:
       db:
         condition: service_healthy
-
     networks:
       - internal
-
     restart: unless-stopped
-
 
   scheduler:
     build:
       context: .
       dockerfile: Dockerfile
-
     environment:
       API_URL: http://api:8000
       SERVICE_API_KEY: ${SERVICE_API_KEY:?Missing SERVICE_API_KEY}
-
       POLL_INTERVAL_SECONDS: 5
-
-      REGISTRY_TYPE: ${REGISTRY_TYPE:-dockerhub}
+      REGISTRY_TYPE: ${REGISTRY_TYPE:-local}
       DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
-      LOCAL_REGISTRY_URL: ${LOCAL_REGISTRY_URL:-}
-
+      LOCAL_REGISTRY_URL: localhost:5001
       SWARM_NETWORK: helios-web
       DEPLOYMENT_DOMAIN: localhost
-
       APP_PORT: 8000
       STARTUP_TIMEOUT: 90
-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
     depends_on:
       - api
-
+      - registry
     networks:
       - internal
-
     restart: unless-stopped
-
 
   traefik:
     image: traefik:v3.6.16
-
     ports:
       - "80:80"
       - "127.0.0.1:8080:8080"
-
     volumes:
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-
     networks:
       - web
-
     restart: unless-stopped
-
 
   registry:
     image: registry:2
-
     ports:
-      - "127.0.0.1:5000:5000"
-
+      - "127.0.0.1:5001:5000"
     volumes:
       - registry_data:/var/lib/registry
-
     networks:
       - internal
-
     restart: unless-stopped
 
-
+  build-service:
+    image: python:3.12-slim
+    working_dir: /app
+    command:
+      - sh
+      - -c
+      - >-
+        apt-get update
+        && apt-get install -y --no-install-recommends git
+        && rm -rf /var/lib/apt/lists/*
+        && pip install --no-cache-dir -r requirements.txt
+        && python worker.py
+    environment:
+      API_URL: http://api:8000
+      SERVICE_API_KEY: ${SERVICE_API_KEY:?Missing SERVICE_API_KEY}
+      POLL_INTERVAL_SECONDS: 5
+      REGISTRY_TYPE: ${REGISTRY_TYPE:-local}
+      DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
+      LOCAL_REGISTRY_URL: registry:5000
+    volumes:
+      - ../build-service:/app:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - api
+      - registry
+    networks:
+      - internal
+    restart: unless-stopped
 networks:
-
   internal:
     driver: bridge
-
   web:
     external: true
     name: helios-web
-
 
 volumes:
   postgres_data:

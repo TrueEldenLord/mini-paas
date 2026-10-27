@@ -40,9 +40,9 @@ def auth_headers():
     }
 
 def update_deployment_metadata(deployment_id, service_id, public_url):
-    """Save Docker Swarm service details through the API."""
+    """Save Docker Swarm service details through the API runtime endpoint."""
     response = requests.patch(
-        f"{API_URL}/deployments/{deployment_id}/metadata",
+        f"{API_URL}/deployments/{deployment_id}/runtime",
         json={
             "container_id": service_id,
             "public_url": public_url,

@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 
 sys.path.insert(
@@ -303,3 +304,152 @@ def test_reconcile_preserves_existing_deployment():
         controller.reconcile()
 
     mock_remove.assert_not_called()
+
+def test_reconcile_saves_runtime_metadata_for_new_service():
+    """New services should have their runtime metadata saved through the API."""
+    deployment = {
+        "id": TEST_ID,
+        "status": "running",
+        "container_id": None,
+        "public_url": None,
+    }
+
+    expected_url = f"http://{TEST_ID}.localhost"
+
+    with patch(
+        "controller.fetch_deployments",
+        return_value=[deployment],
+    ), patch(
+        "controller.managed_service_map",
+        return_value={},
+    ), patch(
+        "controller.deploy",
+        return_value={
+            "service_id": "service-123",
+            "public_url": expected_url,
+        },
+    ), patch(
+        "controller.update_deployment_metadata",
+    ) as mock_update:
+
+        controller.reconcile()
+
+    mock_update.assert_called_once_with(
+        TEST_ID,
+        "service-123",
+        expected_url,
+    )
+
+
+def test_reconcile_skips_unchanged_runtime_metadata():
+    """Existing services with matching metadata should not trigger API updates."""
+    expected_url = f"http://{TEST_ID}.localhost"
+
+    deployment = {
+        "id": TEST_ID,
+        "status": "running",
+        "container_id": "service-123",
+        "public_url": expected_url,
+    }
+
+    with patch(
+        "controller.fetch_deployments",
+        return_value=[deployment],
+    ), patch(
+        "controller.managed_service_map",
+        return_value={TEST_ID: "service-123"},
+    ), patch(
+        "controller.deploy",
+    ) as mock_deploy, patch(
+        "controller.update_deployment_metadata",
+    ) as mock_update:
+
+        controller.reconcile()
+
+    mock_deploy.assert_not_called()
+    mock_update.assert_not_called()
+
+
+def test_reconcile_updates_changed_runtime_metadata():
+    """Existing services with stale metadata should trigger an API update."""
+    expected_url = f"http://{TEST_ID}.localhost"
+
+    deployment = {
+        "id": TEST_ID,
+        "status": "running",
+        "container_id": "old-service-id",
+        "public_url": "http://old-url.localhost",
+    }
+
+    with patch(
+        "controller.fetch_deployments",
+        return_value=[deployment],
+    ), patch(
+        "controller.managed_service_map",
+        return_value={TEST_ID: "service-123"},
+    ), patch(
+        "controller.update_deployment_metadata",
+    ) as mock_update:
+
+        controller.reconcile()
+
+    mock_update.assert_called_once_with(
+        TEST_ID,
+        "service-123",
+        expected_url,
+    )
+
+
+def test_reconcile_continues_after_metadata_update_failure(caplog):
+    """A failed metadata update should be logged without stopping reconciliation."""
+    expected_url = f"http://{TEST_ID}.localhost"
+
+    second_id = "223e4567-e89b-12d3-a456-426614174000"
+
+    deployments = [
+        {
+            "id": TEST_ID,
+            "status": "running",
+            "container_id": None,
+            "public_url": None,
+        },
+        {
+            "id": second_id,
+            "status": "running",
+            "container_id": None,
+            "public_url": None,
+        },
+    ]
+
+    def fail_first_update(deployment_id, service_id, public_url):
+        if deployment_id == TEST_ID:
+            raise requests.exceptions.HTTPError("Simulated API failure")
+
+    with patch(
+        "controller.fetch_deployments",
+        return_value=deployments,
+    ), patch(
+        "controller.managed_service_map",
+        return_value={},
+    ), patch(
+        "controller.deploy",
+        side_effect=[
+            {
+                "service_id": "service-123",
+                "public_url": expected_url,
+            },
+            {
+                "service_id": "service-456",
+                "public_url": f"http://{second_id}.localhost",
+            },
+        ],
+    ), patch(
+        "controller.update_deployment_metadata",
+        side_effect=fail_first_update,
+    ) as mock_update:
+
+        controller.reconcile()
+
+    assert mock_update.call_count == 2
+    assert "Could not reconcile deployment" in caplog.text
+    assert TEST_ID in caplog.text
