@@ -1,6 +1,8 @@
 import uuid
 import logging
-from fastapi import FastAPI, Depends, HTTPException
+import os
+import secrets
+from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -40,6 +42,29 @@ class DeploymentCreate(BaseModel):
 class StatusUpdate(BaseModel):
     status: str
 
+class DeploymentMetadataUpdate(BaseModel):
+    container_id: str
+    public_url: str
+
+
+def verify_service_api_key(
+    x_service_api_key: str | None = Header(default=None)
+):
+    expected_key = os.environ.get("SERVICE_API_KEY")
+
+    if not expected_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Service authentication is not configured"
+        )
+
+    if not x_service_api_key or not secrets.compare_digest(
+        x_service_api_key, expected_key
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid service API key"
+        )
 
 @app.get("/")
 def read_root():
@@ -99,4 +124,35 @@ def update_status(deployment_id: uuid.UUID, body: StatusUpdate, db: Session = De
     db.commit()
     db.refresh(deployment)
     logger.info(f"Deployment {deployment.id} status changed to {status}")
+    return deployment
+
+@app.patch("/deployments/{deployment_id}/metadata")
+def update_deployment_metadata(
+    deployment_id: uuid.UUID,
+    body: DeploymentMetadataUpdate,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_service_api_key),
+):
+    deployment = (
+        db.query(models.Deployment)
+        .filter(models.Deployment.id == deployment_id)
+        .first()
+    )
+
+    if deployment is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Deployment not found"
+        )
+
+    deployment.container_id = body.container_id
+    deployment.public_url = body.public_url
+
+    db.commit()
+    db.refresh(deployment)
+
+    logger.info(
+        f"Updated deployment metadata for {deployment.id}"
+    )
+
     return deployment
