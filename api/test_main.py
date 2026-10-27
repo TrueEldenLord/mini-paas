@@ -173,3 +173,46 @@ def test_token_without_sub_claim_rejected():
     )
     response = client.get("/deployments", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 401
+
+
+def test_update_runtime_sets_both_fields_with_service_key():
+    deployment_id = _create_deployment()
+    response = client.patch(
+        f"/deployments/{deployment_id}/runtime",
+        json={"container_id": "abc123", "public_url": "http://app.localhost"},
+        headers=SERVICE_HEADERS,
+    )
+    assert response.status_code == 200
+    assert response.json()["container_id"] == "abc123"
+    assert response.json()["public_url"] == "http://app.localhost"
+
+
+def test_update_runtime_partial_keeps_other_field():
+    deployment_id = _create_deployment()
+    client.patch(f"/deployments/{deployment_id}/runtime", json={"container_id": "abc123"}, headers=SERVICE_HEADERS)
+    response = client.patch(
+        f"/deployments/{deployment_id}/runtime",
+        json={"public_url": "http://app.localhost"},
+        headers=SERVICE_HEADERS,
+    )
+    assert response.status_code == 200
+    assert response.json()["container_id"] == "abc123"
+    assert response.json()["public_url"] == "http://app.localhost"
+
+
+def test_update_runtime_empty_body_rejected():
+    deployment_id = _create_deployment()
+    response = client.patch(f"/deployments/{deployment_id}/runtime", json={}, headers=SERVICE_HEADERS)
+    assert response.status_code == 400
+
+
+def test_update_runtime_not_found():
+    fake_id = "00000000-0000-0000-0000-000000000000"
+    response = client.patch(f"/deployments/{fake_id}/runtime", json={"container_id": "x"}, headers=SERVICE_HEADERS)
+    assert response.status_code == 404
+
+
+def test_update_runtime_without_credentials():
+    deployment_id = _create_deployment()
+    response = client.patch(f"/deployments/{deployment_id}/runtime", json={"container_id": "x"})
+    assert response.status_code == 401
