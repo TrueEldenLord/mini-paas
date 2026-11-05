@@ -4,37 +4,19 @@
 
 import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { getDeployment } from "../api/client";
+import type { Deployment } from "../types";
 import "./DeploymentDetail.css";
 
-type DeploymentStatus = "queued" | "building" | "running" | "failed";
-
-interface Deployment {
-    id: string | number;
-    name: string;
-    repository: string;
-    branch: string;
-    status: DeploymentStatus;
-    live_url: string | null;
-    logs: string[];
-}
-
-// Temporary demo data until the API client is ready
 const MOCK_DEPLOYMENT: Deployment = {
-    id: 1,
-    name: "Helios Demo Application",
-    repository: "github.com/example/helios-demo",
-    branch: "main",
+    id: "00000000-0000-0000-0000-000000000000",
+    repo_url: "github.com/example/helios-demo",
     status: "building",
-    live_url: null,
-    logs: [
-        "[10:30:01] Deployment initialized.",
-        "[10:30:02] Cloning GitHub repository...",
-        "[10:30:04] Repository cloned successfully.",
-        "[10:30:05] Preparing Docker build...",
-        "[10:30:08] Installing dependencies...",
-        "[10:30:12] Building Docker image...",
-        "[10:30:15] Build in progress..."
-    ]
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    container_id: null,
+    public_url: null,
+    logs: "[10:30:01] Deployment initialized.\n[10:30:02] Cloning GitHub repository...\n[10:30:04] Repository cloned successfully.\n[10:30:05] Preparing Docker build...\n[10:30:08] Installing dependencies...\n[10:30:12] Building Docker image...\n[10:30:15] Build in progress..."
 };
 
 const statusDetails = {
@@ -63,7 +45,7 @@ const statusDetails = {
 export default function DeploymentDetail() {
     const { id } = useParams<{ id: string }>();
 
-    const deploymentId = id ?? "1";
+    const deploymentId = id ?? "";
 
     const [deployment, setDeployment] = useState<Deployment>({
         ...MOCK_DEPLOYMENT,
@@ -81,21 +63,13 @@ export default function DeploymentDetail() {
 
         const fetchDeployment = async () => {
             try {
-                const response = await fetch(
-                    `/deployments/${deploymentId}`
-                );
-
-                if (!response.ok) {
-                    throw new Error("Unable to retrieve deployment");
-                }
-
-                const data: Deployment = await response.json();
+                const data = await getDeployment(deploymentId);
 
                 if (active) {
                     setDeployment(data);
                     setConnectionError(false);
                 }
-            } catch (error) {
+            } catch {
                 if (active) {
                     setConnectionError(true);
                 }
@@ -129,6 +103,8 @@ export default function DeploymentDetail() {
 
     const status = statusDetails[currentStatus];
 
+    const logLines = deployment.logs?.split("\n").filter(Boolean) ?? [];
+
     return (
         <div className="deployment-page">
 
@@ -139,7 +115,7 @@ export default function DeploymentDetail() {
                         Dashboard / Deployments / #{deployment.id}
                     </p>
 
-                    <h1>{deployment.name}</h1>
+                    <h1>{deployment.repo_url}</h1>
 
                     <p className="deployment-subtitle">
                         View deployment information and build activity.
@@ -188,12 +164,12 @@ export default function DeploymentDetail() {
                 <div className="deployment-info-grid">
                     <div className="info-item">
                         <span>Repository</span>
-                        <strong>{deployment.repository}</strong>
+                        <strong>{deployment.repo_url}</strong>
                     </div>
 
                     <div className="info-item">
-                        <span>Branch</span>
-                        <strong>{deployment.branch}</strong>
+                        <span>Container ID</span>
+                        <strong>{deployment.container_id ?? "—"}</strong>
                     </div>
 
                     <div className="info-item">
@@ -204,7 +180,7 @@ export default function DeploymentDetail() {
             </section>
 
             {/* Live Application URL */}
-            {currentStatus === "running" && deployment.live_url && (
+            {currentStatus === "running" && deployment.public_url && (
                 <section className="live-url-card">
                     <div>
                         <span className="live-indicator"></span>
@@ -218,7 +194,7 @@ export default function DeploymentDetail() {
                     </div>
 
                     <a
-                        href={deployment.live_url}
+                        href={deployment.public_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="live-url-button"
@@ -227,7 +203,7 @@ export default function DeploymentDetail() {
                     </a>
 
                     <p className="live-url-text">
-                        {deployment.live_url}
+                        {deployment.public_url}
                     </p>
                 </section>
             )}
@@ -254,7 +230,7 @@ export default function DeploymentDetail() {
                     aria-label="Deployment build logs"
                     aria-live="polite"
                 >
-                    {deployment.logs?.map((log, index) => (
+                    {logLines.map((log, index) => (
                         <div className="log-line" key={index}>
                             <span className="log-number">
                                 {String(index + 1).padStart(2, "0")}
@@ -267,7 +243,7 @@ export default function DeploymentDetail() {
 
                 <div className="logs-footer">
                     <span>
-                        {deployment.logs?.length ?? 0} log entries
+                        {logLines.length} log entries
                     </span>
 
                     <span>Automatically scrolling</span>
@@ -277,4 +253,3 @@ export default function DeploymentDetail() {
         </div>
     );
 }
-
