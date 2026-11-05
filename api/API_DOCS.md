@@ -22,6 +22,7 @@ Every deployment endpoint requires credentials. There are two kinds, depending o
 | `GET /deployments` | yes | yes |
 | `PATCH /deployments/{id}/status` | yes | yes |
 | `PATCH /deployments/{id}/logs` | yes | yes |
+| `PATCH /deployments/{id}/runtime` | yes | yes |
 | `GET /deployments/{id}` | yes | no |
 | `POST /deployments` | yes | no |
 | `DELETE /deployments/{id}` | yes | no |
@@ -282,6 +283,32 @@ Sets the build output logs for a deployment. Used by Role 2 (Build Service) to r
 ```
 
 **Response (422):** if `logs` is missing or not a string
+
+---
+
+### `PATCH /deployments/{id}/runtime` 🔒 (user JWT or service key)
+
+Sets the runtime details of a deployment once its container is running. Used by Role 3 (Container Scheduler & Networking). Send one or both fields. Fields you leave out are not changed. Updates `updated_at`.
+
+**Request body:**
+
+```json
+{ "container_id": "a1b2c3d4e5f6", "public_url": "http://my-app.localhost" }
+```
+
+**Response (200):** the updated Deployment object
+
+**Response (400):** if neither `container_id` nor `public_url` is provided
+
+```json
+{ "detail": "Provide container_id and/or public_url" }
+```
+
+**Response (404):**
+
+```json
+{ "detail": "Deployment not found" }
+```
 
 ---
 
