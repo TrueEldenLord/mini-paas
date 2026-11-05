@@ -7,5 +7,13 @@ entryPoints:
     address: ":80"
 
 providers:
-  file:
-    filename: /routes.yml
+  swarm:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: helios-web
+    watch: true
+
+log:
+  level: INFO
+
+accessLog: {}
