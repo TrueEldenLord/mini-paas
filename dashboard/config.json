@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "Mini-PaaS",
+    "description": "Application Deployment and Monitoring Dashboard",
+    "version": "1.0.0"
+  },
+  "api": {
+    "baseUrl": "http://localhost:8000",
+    "endpoints": {
+      "health": "/health",
+      "deployments": "/deployments"
+    },
+    "timeout": 10000
+  },
+  "dashboard": {
+    "defaultPage": "metrics",
+    "refreshInterval": 60000,
+    "useMockData": false,
+    "showNotifications": true
+  },
+  "deployments": {
+    "statuses": [
+      "queued",
+      "building",
+      "running",
+      "failed"
+    ],
+    "pageSize": 100,
+    "enableSearch": true,
+    "enableFiltering": true,
+    "enableDeletion": true
+  },
+  "metrics": {
+    "enabled": false,
+    "showPlaceholders": true,
+    "errors": {
+      "enabled": false
+    },
+    "responseTime": {
+      "enabled": false
+    }
+  },
+  "activity": {
+    "enabled": true,
+    "showRepository": true,
+    "showStatus": true,
+    "showCreatedAt": true,
+    "showLogs": true
+  },
+  "theme": {
+    "name": "heroku",
+    "primaryColor": "#79589F",
+    "backgroundColor": "#FFFFFF",
+    "sidebarColor": "#3F3F44",
+    "successColor": "#28A745",
+    "warningColor": "#E6AD50",
+    "errorColor": "#DC3545"
+  }
+}
