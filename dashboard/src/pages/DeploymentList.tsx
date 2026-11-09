@@ -2,7 +2,7 @@
 // Real data is now wired in. The sidebar favorites and status cards show live deployments.
 // The rest of the page (nav, alerts, charts) is yours to build out.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDeploymentStore } from '../store/deployments';
 
@@ -21,8 +21,28 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function DeploymentList() {
-  const { deployments, fetchDeployments, loading, error } = useDeploymentStore();
+  const { deployments, fetchDeployments, submitDeployment, loading, error } = useDeploymentStore();
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [repoUrl, setRepoUrl] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!repoUrl.trim()) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await submitDeployment(repoUrl.trim());
+      setRepoUrl('');
+      setShowModal(false);
+    } catch (err: any) {
+      setSubmitError(err.message ?? 'Submission failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     fetchDeployments();
@@ -49,6 +69,19 @@ export default function DeploymentList() {
             }}
           >
             Sign out
+          </button>
+        </div>
+
+        <div style={{ padding: '12px 16px' }}>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              width: '100%', padding: '8px 12px', background: '#1e518c',
+              color: '#fff', border: 'none', borderRadius: '6px',
+              fontSize: '12px', cursor: 'pointer', fontWeight: 600,
+            }}
+          >
+            + New Deployment
           </button>
         </div>
 
@@ -167,6 +200,76 @@ export default function DeploymentList() {
         </section>
 
       </main>
+
+      {showModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '12px', padding: '28px',
+            width: '420px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }}>
+            <h2 style={{ fontSize: '18px', color: '#1e518c', marginBottom: '6px' }}>New Deployment</h2>
+            <p style={{ fontSize: '12px', color: '#7b8492', marginBottom: '12px' }}>
+              Enter a public GitHub repo URL to deploy.
+            </p>
+            <div style={{
+              background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '6px',
+              padding: '10px 12px', marginBottom: '16px', fontSize: '12px', color: '#92400e',
+            }}>
+              <strong>Requirements:</strong>
+              <ul style={{ margin: '4px 0 0 16px', lineHeight: '1.7' }}>
+                <li>Repo must be <strong>public</strong></li>
+                <li><strong>Dockerfile</strong> must be present at the repo root</li>
+                <li>App must listen on port <strong>8000</strong></li>
+              </ul>
+              <p style={{ marginTop: '6px' }}>
+                Getting a 404? Your app is likely running on the wrong port. Update your app to listen on <strong>8000</strong>.
+              </p>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                placeholder="https://github.com/user/repo"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', border: '1px solid #d1d5db',
+                  borderRadius: '6px', fontSize: '13px', marginBottom: '12px',
+                  outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+              {submitError && (
+                <p style={{ color: '#ef4444', fontSize: '12px', marginBottom: '10px' }}>{submitError}</p>
+              )}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => { setShowModal(false); setRepoUrl(''); setSubmitError(null); }}
+                  style={{
+                    padding: '8px 16px', background: 'none', border: '1px solid #d1d5db',
+                    borderRadius: '6px', fontSize: '13px', cursor: 'pointer', color: '#6b7280',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !repoUrl.trim()}
+                  style={{
+                    padding: '8px 16px', background: submitting ? '#93c5fd' : '#1e518c',
+                    color: '#fff', border: 'none', borderRadius: '6px',
+                    fontSize: '13px', cursor: submitting ? 'not-allowed' : 'pointer', fontWeight: 600,
+                  }}
+                >
+                  {submitting ? 'Deploying…' : 'Deploy'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

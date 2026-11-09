@@ -52,7 +52,7 @@ services:
       POLL_INTERVAL_SECONDS: 5
       REGISTRY_TYPE: ${REGISTRY_TYPE:-local}
       DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
-      LOCAL_REGISTRY_URL: localhost:5001
+      LOCAL_REGISTRY_URL: host.docker.internal:5001
       SWARM_NETWORK: helios-web
       DEPLOYMENT_DOMAIN: localhost
       APP_PORT: 8000
@@ -81,7 +81,7 @@ services:
   registry:
     image: registry:2
     ports:
-      - "127.0.0.1:5001:5000"
+      - "5001:5000"
     volumes:
       - registry_data:/var/lib/registry
     networks:
@@ -106,7 +106,7 @@ services:
       POLL_INTERVAL_SECONDS: 5
       REGISTRY_TYPE: ${REGISTRY_TYPE:-local}
       DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
-      LOCAL_REGISTRY_URL: registry:5000
+      LOCAL_REGISTRY_URL: host.docker.internal:5001
     volumes:
       - ../build-service:/app:ro
       - /var/run/docker.sock:/var/run/docker.sock

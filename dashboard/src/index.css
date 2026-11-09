@@ -317,6 +317,7 @@ body {
 
 .status-cards {
     display: flex;
+    flex-wrap: wrap;
     gap: 14px;
     padding: 25px 28px 20px;
 }
@@ -326,8 +327,9 @@ body {
     height: 58px;
     padding: 8px 10px;
     border: 1px solid #3478ba;
-    border-radius: 3px;
+    border-radius: 6px;
     background: #f3f8fc;
+    box-shadow: 0 1px 4px rgba(30,81,140,0.07);
 }
 
 .card-header {

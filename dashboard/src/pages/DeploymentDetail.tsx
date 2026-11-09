@@ -2,9 +2,10 @@
 // This is your page. Use the deployment id from the URL to fetch and display details.
 // Wire up polling, log viewer, status indicator, and live URL here.
 
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { getDeployment } from "../api/client";
+import { useDeploymentStore } from "../store/deployments";
 import type { Deployment } from "../types";
 import "./DeploymentDetail.css";
 
@@ -44,6 +45,8 @@ const statusDetails = {
 
 export default function DeploymentDetail() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const { removeDeployment } = useDeploymentStore();
 
     const deploymentId = id ?? "";
 
@@ -53,6 +56,19 @@ export default function DeploymentDetail() {
     });
 
     const [connectionError, setConnectionError] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    async function handleDelete() {
+        setDeleting(true);
+        try {
+            await removeDeployment(deploymentId);
+            navigate('/');
+        } finally {
+            setDeleting(false);
+            setConfirmDelete(false);
+        }
+    }
 
     // Reference to the build log container
     const logContainerRef = useRef<HTMLDivElement>(null);
@@ -112,7 +128,8 @@ export default function DeploymentDetail() {
             <div className="deployment-header">
                 <div>
                     <p className="deployment-breadcrumb">
-                        Dashboard / Deployments / #{deployment.id}
+                        <span onClick={() => navigate('/')} style={{ cursor: 'pointer', color: '#1e518c' }}>Dashboard</span>
+                        {' / Deployments / '}#{deployment.id}
                     </p>
 
                     <h1>{deployment.repo_url}</h1>
@@ -122,10 +139,61 @@ export default function DeploymentDetail() {
                     </p>
                 </div>
 
-                <span className="deployment-id">
-                    ID: #{deployment.id}
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+                    <span className="deployment-id">
+                        ID: #{deployment.id}
+                    </span>
+                    <button
+                        onClick={() => setConfirmDelete(true)}
+                        style={{
+                            padding: '7px 14px', background: '#fee2e2', color: '#dc2626',
+                            border: '1px solid #fca5a5', borderRadius: '6px',
+                            fontSize: '12px', cursor: 'pointer', fontWeight: 600,
+                        }}
+                    >
+                        Delete Deployment
+                    </button>
+                </div>
             </div>
+
+            {confirmDelete && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+                }}>
+                    <div style={{
+                        background: '#fff', borderRadius: '12px', padding: '28px',
+                        width: '380px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    }}>
+                        <h2 style={{ fontSize: '17px', color: '#dc2626', marginBottom: '8px' }}>Delete Deployment?</h2>
+                        <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px' }}>
+                            This will permanently remove the deployment and stop the running container.
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={() => setConfirmDelete(false)}
+                                style={{
+                                    padding: '8px 16px', background: 'none', border: '1px solid #d1d5db',
+                                    borderRadius: '6px', fontSize: '13px', cursor: 'pointer', color: '#6b7280',
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                disabled={deleting}
+                                style={{
+                                    padding: '8px 16px', background: deleting ? '#fca5a5' : '#dc2626',
+                                    color: '#fff', border: 'none', borderRadius: '6px',
+                                    fontSize: '13px', cursor: deleting ? 'not-allowed' : 'pointer', fontWeight: 600,
+                                }}
+                            >
+                                {deleting ? 'Deleting…' : 'Yes, Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Deployment Status */}
             <section className="deployment-card">

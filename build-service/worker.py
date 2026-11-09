@@ -80,7 +80,9 @@ def push_image(deployment_id):
         remote_tag = f"{LOCAL_REGISTRY_URL}/mini-paas:{deployment_id}"
     image = client.images.get(local_tag)
     image.tag(remote_tag)
-    client.images.push(remote_tag)
+    for event in client.images.push(remote_tag, stream=True, decode=True):
+        if "error" in event:
+            raise RuntimeError(f"Push failed: {event['error']}")
 
 
 def process(deployment):
