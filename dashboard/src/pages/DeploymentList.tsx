@@ -423,7 +423,7 @@ export default function DeploymentList() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !repoUrl.trim()}
+                  disabled={submitting}
                   style={{
                     padding: '8px 16px', background: submitting ? '#93c5fd' : '#1e518c',
                     color: '#fff', border: 'none', borderRadius: '6px',
