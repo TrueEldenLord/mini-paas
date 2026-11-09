@@ -129,7 +129,83 @@ If prompted to install WSL 2, say yes and follow the steps. Open Docker Desktop 
 
 ---
 
-## Step 7 — Run the Phase 1 Stack (Verify Everything Works)
+## Step 7 — Run the Full Stack
+
+This starts everything: the database, API, build service, scheduler, registry, Traefik, and the React dashboard.
+
+### 1. Create your `.env` file
+
+In the `infra/` folder, create a file named `.env`:
+
+```
+POSTGRES_PASSWORD=yourpassword
+SERVICE_API_KEY=any-random-string
+JWT_SECRET_KEY=another-random-string
+```
+
+You can use any values — just keep them consistent. Ask Alex if you need the team's shared values.
+
+### 2. Create the shared Docker network (one-time)
+
+```bash
+docker network create helios-web
+```
+
+### 3. Initialize Docker Swarm (one-time)
+
+```bash
+docker swarm init
+```
+
+If it says "already a swarm member", you're good — skip this.
+
+### 4. Start the backend
+
+```bash
+cd infra
+docker compose up -d
+```
+
+This starts: PostgreSQL, the FastAPI backend, the build service, the scheduler, the Docker registry, and Traefik.
+
+Verify the API is up:
+```bash
+curl http://localhost:8000/health
+```
+
+Expected: `{"status":"ok"}`
+
+### 5. Start the dashboard
+
+In a separate terminal:
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173** in your browser. You should see the Helios login page.
+
+### 6. Test an end-to-end deployment
+
+1. Register an account or log in with `test@test.com` / `testpass123`
+2. Click **New Deployment**, paste a public GitHub repo URL that has a Dockerfile
+3. Watch the status go `queued → building → running`
+4. Click **Open ↗** to visit the live app at `{id}.localhost`
+
+### Stopping the stack
+
+```bash
+cd infra
+docker compose down
+```
+
+Add `-v` to also wipe the database: `docker compose down -v`
+
+---
+
+## Step 8 — Run the Phase 1 Stack (Legacy Verify Step)
 
 This step confirms Docker and Traefik are working correctly on your machine.
 
@@ -175,7 +251,7 @@ The containers are running but Traefik isn't routing correctly. Run `docker comp
 
 ---
 
-## Step 8 — Go to Your Component Folder
+## Step 9 — Go to Your Component Folder
 
 Navigate to your role's folder and read the README inside — it has the specific packages to install and the tasks you're responsible for.
 
