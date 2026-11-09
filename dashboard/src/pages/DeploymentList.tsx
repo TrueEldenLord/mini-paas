@@ -328,19 +328,32 @@ export default function DeploymentList() {
                     </span>
                     <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>{d.id.slice(0, 8)}</span>
                     {d.public_url ? (
-                      <a
-                        href={d.public_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: '#16a34a', fontWeight: 600, textDecoration: 'none',
-                          border: '1px solid #86efac', borderRadius: '4px', padding: '3px 10px',
-                          fontSize: '11px',
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Open ↗
-                      </a>
+                      <div style={{ display: 'flex', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                        <a
+                          href={d.public_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: '#16a34a', fontWeight: 600, textDecoration: 'none',
+                            border: '1px solid #86efac', borderRadius: '4px', padding: '3px 10px',
+                            fontSize: '11px',
+                          }}
+                        >
+                          Open ↗
+                        </a>
+                        <a
+                          href={`${d.public_url}/docs`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: '#2563a6', fontWeight: 600, textDecoration: 'none',
+                            border: '1px solid #93c5fd', borderRadius: '4px', padding: '3px 10px',
+                            fontSize: '11px',
+                          }}
+                        >
+                          Docs ↗
+                        </a>
+                      </div>
                     ) : (
                       <span style={{ color: '#9ca3af', fontSize: '11px' }}>URL pending</span>
                     )}
