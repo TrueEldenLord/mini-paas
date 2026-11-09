@@ -34,11 +34,6 @@
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -239,6 +234,7 @@ body {
     margin-left: 220px;
     min-height: 100vh;
     background: white;
+    text-align: left;
 }
 
 
@@ -324,12 +320,17 @@ body {
 
 .status-card {
     width: 190px;
-    height: 58px;
-    padding: 8px 10px;
+    padding: 10px 12px;
     border: 1px solid #3478ba;
-    border-radius: 6px;
+    border-radius: 8px;
     background: #f3f8fc;
     box-shadow: 0 1px 4px rgba(30,81,140,0.07);
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.status-card:hover {
+    box-shadow: 0 4px 12px rgba(30,81,140,0.15);
+    transform: translateY(-1px);
 }
 
 .card-header {

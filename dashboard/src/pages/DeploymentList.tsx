@@ -5,10 +5,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDeploymentStore } from '../store/deployments';
+import { useAuthStore } from '../store/auth';
 import { setToken } from '../api/client';
 
-function logout(navigate: (path: string) => void) {
+function logout(navigate: (path: string) => void, clearUser: () => void) {
   setToken(null);
+  clearUser();
   navigate('/login');
 }
 
@@ -17,17 +19,28 @@ const POLL_INTERVAL = Number(import.meta.env.VITE_POLL_INTERVAL_MS) || 5000;
 const STATUS_COLORS: Record<string, string> = {
   queued: '#9ca3af',
   building: '#f59e0b',
-  running: '#72bf74',
+  running: '#22c55e',
   failed: '#ef4444',
+};
+
+const STATUS_BG: Record<string, string> = {
+  queued: '#f3f4f6',
+  building: '#fffbeb',
+  running: '#f0fdf4',
+  failed: '#fef2f2',
 };
 
 export default function DeploymentList() {
   const { deployments, fetchDeployments, submitDeployment, loading, error } = useDeploymentStore();
+  const { username, email, clearUser } = useAuthStore();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [repoUrl, setRepoUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const displayName = username || (email ? email.split('@')[0] : 'User');
+  const displayEmail = email || '';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,27 +69,30 @@ export default function DeploymentList() {
 
   return (
     <>
-      {/* left menu */}
+      {/* left sidebar */}
       <aside className="sidebar">
 
         <div className="dashboard-logo">
-          <h2>Dashboard</h2>
+          <h2>Mini PaaS</h2>
         </div>
 
-        <div className="user-profile" style={{ justifyContent: 'space-between' }}>
-          <p>email profile</p>
+        <div className="user-profile" style={{ justifyContent: 'space-between', flexDirection: 'column', alignItems: 'flex-start', height: 'auto', padding: '12px 14px', gap: '2px' }}>
+          <p style={{ fontWeight: 600, fontSize: '13px' }}>{displayName}</p>
+          {displayEmail && (
+            <p style={{ fontSize: '11px', color: '#b8d4ee', marginTop: '2px' }}>{displayEmail}</p>
+          )}
           <button
-            onClick={() => logout(navigate)}
+            onClick={() => logout(navigate, clearUser)}
             style={{
               background: 'none', border: 'none', color: '#b8d4ee',
-              fontSize: '11px', cursor: 'pointer', padding: 0,
+              fontSize: '11px', cursor: 'pointer', padding: 0, marginTop: '6px',
             }}
           >
             Sign out
           </button>
         </div>
 
-        <div style={{ padding: '12px 16px' }}>
+        <div style={{ padding: '12px 14px' }}>
           <button
             onClick={() => setShowModal(true)}
             style={{
@@ -90,10 +106,10 @@ export default function DeploymentList() {
         </div>
 
         <div className="favorites">
-          <h3>FAVORITES</h3>
+          <h3>DEPLOYMENTS</h3>
           <ul>
             {deployments.length === 0 ? (
-              <li>No deployments yet</li>
+              <li style={{ color: '#7eaad4', cursor: 'default' }}>None yet</li>
             ) : (
               deployments.slice(0, 8).map((d) => (
                 <li key={d.id} onClick={() => navigate(`/deployments/${d.id}`)}>
@@ -104,25 +120,19 @@ export default function DeploymentList() {
           </ul>
         </div>
 
-        <div className="personal-apps">
-          <h3>Personal Apps</h3>
-        </div>
-
-        <div className="organizations">
-          <h3>ORGANIZATIONS</h3>
-          <p>HELIOS</p>
-        </div>
-
       </aside>
 
-      {/* main body */}
+      {/* main content */}
       <main className="main-content">
 
-        {/* TOP HEADER */}
+        {/* top header */}
         <header className="top-header">
-          <div className="back-button">&lt;</div>
-          <div className="app-name">hit</div>
-          <div className="header-right">blog</div>
+          <div className="app-name" style={{ fontWeight: 600, fontSize: '14px', color: '#1e518c' }}>
+            All Deployments
+          </div>
+          <div className="header-right" style={{ color: '#9ca3af', fontSize: '12px' }}>
+            {deployments.length} total
+          </div>
         </header>
 
         {/* navigation */}
@@ -135,49 +145,75 @@ export default function DeploymentList() {
           <a href="#">Settings</a>
         </nav>
 
-        {/* status cards — live deployments */}
+        {/* deployment cards */}
         <section className="status-cards">
           {error && (
-            <p style={{ color: '#ef4444', fontSize: '12px', padding: '4px' }}>
+            <p style={{ color: '#ef4444', fontSize: '12px', padding: '4px', width: '100%' }}>
               Could not reach API — retrying…
             </p>
           )}
           {!error && loading && deployments.length === 0 && (
             <p style={{ color: '#9ca3af', fontSize: '12px', padding: '4px' }}>Loading…</p>
           )}
-          {!error && !loading && deployments.length === 0 ? (
-            <p style={{ color: '#9ca3af', fontSize: '12px', padding: '4px' }}>No deployments yet.</p>
-          ) : (
-            deployments.map((d) => (
-              <div
-                key={d.id}
-                className="status-card"
-                style={{ cursor: 'pointer', width: '220px', height: 'auto' }}
-                onClick={() => navigate(`/deployments/${d.id}`)}
+          {!error && !loading && deployments.length === 0 && (
+            <div style={{
+              width: '100%', textAlign: 'center', padding: '60px 20px',
+              color: '#9ca3af',
+            }}>
+              <div style={{ fontSize: '36px', marginBottom: '12px' }}>🚀</div>
+              <p style={{ fontSize: '15px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
+                No deployments yet
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: '20px' }}>
+                Deploy your first app to get started.
+              </p>
+              <button
+                onClick={() => setShowModal(true)}
+                style={{
+                  padding: '9px 20px', background: '#2563a6', color: '#fff',
+                  border: 'none', borderRadius: '6px', fontSize: '13px',
+                  cursor: 'pointer', fontWeight: 600,
+                }}
               >
-                <div className="card-header">
-                  <h3>{d.repo_url.split('/').pop()}</h3>
-                  <span
-                    className="status-indicator"
-                    style={{ background: STATUS_COLORS[d.status] ?? '#9ca3af', width: 'auto', padding: '0 5px', borderRadius: '3px', fontSize: '9px' }}
-                  >
-                    {d.status}
-                  </span>
-                </div>
-                <div className="card-content" style={{ marginTop: '6px' }}>
-                  <span style={{ fontSize: '10px', color: '#777', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {d.repo_url}
-                  </span>
-                  <span style={{ fontSize: '10px', color: '#aaa', display: 'block', marginTop: '3px' }}>
-                    {d.id.slice(0, 8)}
-                  </span>
-                  <span style={{ fontSize: '10px', color: '#aaa', display: 'block', marginTop: '2px' }}>
-                    {new Date(d.created_at + 'Z').toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            ))
+                + New Deployment
+              </button>
+            </div>
           )}
+          {deployments.map((d) => (
+            <div
+              key={d.id}
+              className="status-card"
+              style={{
+                cursor: 'pointer', width: '240px', height: 'auto',
+                borderColor: STATUS_COLORS[d.status] ?? '#d0d0d8',
+                background: STATUS_BG[d.status] ?? '#f9fafb',
+              }}
+              onClick={() => navigate(`/deployments/${d.id}`)}
+            >
+              <div className="card-header">
+                <h3 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
+                  {d.repo_url.split('/').pop()}
+                </h3>
+                <span style={{
+                  background: STATUS_COLORS[d.status] ?? '#9ca3af',
+                  color: '#fff', padding: '1px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 600,
+                }}>
+                  {d.status}
+                </span>
+              </div>
+              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <span style={{ fontSize: '10px', color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {d.repo_url}
+                </span>
+                <span style={{ fontSize: '10px', color: '#9ca3af', fontFamily: 'monospace' }}>
+                  {d.id.slice(0, 8)}
+                </span>
+                <span style={{ fontSize: '10px', color: '#9ca3af' }}>
+                  {new Date(d.created_at + 'Z').toLocaleString()}
+                </span>
+              </div>
+            </div>
+          ))}
         </section>
 
         {/* app alerts */}

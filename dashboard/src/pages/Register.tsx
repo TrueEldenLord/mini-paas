@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { register, login, setToken } from '../api/client';
+import { useAuthStore } from '../store/auth';
 
 export default function Register() {
   const navigate = useNavigate();
+  const { setUser } = useAuthStore();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +20,7 @@ export default function Register() {
       await register(email, username, password);
       const { access_token } = await login(email, password);
       setToken(access_token);
+      setUser(username, email);
       navigate('/');
     } catch {
       setError('Registration failed. Email may already be in use.');

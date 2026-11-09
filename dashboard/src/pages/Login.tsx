@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, setToken } from '../api/client';
+import { useAuthStore } from '../store/auth';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setUser } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,6 +18,7 @@ export default function Login() {
     try {
       const { access_token } = await login(email, password);
       setToken(access_token);
+      setUser(null, email);
       navigate('/');
     } catch {
       setError('Invalid email or password.');
