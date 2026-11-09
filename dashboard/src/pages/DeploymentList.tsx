@@ -264,34 +264,51 @@ export default function DeploymentList() {
           ))}
         </section>
 
-        {/* app alerts */}
-        <section className="app-alerts">
-          <h3>App Alerts</h3>
-          <div className="alert-message">
-            <strong>■ Request timeouts.</strong>
-            Alert message input here API
-          </div>
-        </section>
+        {/* summary */}
+        {deployments.length > 0 && (
+          <section style={{ padding: '0 28px 28px' }}>
+            <h3 style={{ fontSize: '12px', color: '#686977', fontWeight: 'normal', marginBottom: '14px' }}>Summary</h3>
 
-        {/* errors */}
-        <section className="metrics-section">
-          <h3>Errors</h3>
-          <div className="chart" id="errors-chart">
-            <p>Error chart will go here</p>
-          </div>
-        </section>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+              {[
+                { label: 'Total',    count: deployments.length,      color: '#2563a6', bg: '#e8f2fc' },
+                { label: 'Running',  count: countOf('running'),       color: '#16a34a', bg: '#f0fdf4' },
+                { label: 'Building', count: countOf('building'),      color: '#d97706', bg: '#fffbeb' },
+                { label: 'Queued',   count: countOf('queued'),        color: '#6b7280', bg: '#f3f4f6' },
+                { label: 'Failed',   count: countOf('failed'),        color: '#dc2626', bg: '#fef2f2' },
+              ].map(({ label, count, color, bg }) => (
+                <div key={label} style={{
+                  background: bg, border: `1px solid ${color}22`,
+                  borderRadius: '8px', padding: '12px 18px', minWidth: '90px',
+                }}>
+                  <div style={{ fontSize: '22px', fontWeight: 700, color }}>{count}</div>
+                  <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>{label}</div>
+                </div>
+              ))}
+            </div>
 
-        {/* response time */}
-        <section className="metrics-section">
-          <h3>Response Time</h3>
-          <div className="chart-legend">
-            <span> &lt;== api ==&gt; </span>
-            <span> &lt;== api ==&gt; </span>
-          </div>
-          <div className="chart" id="response-chart">
-            <p>response time code chart</p>
-          </div>
-        </section>
+            {countOf('failed') > 0 && (
+              <div>
+                <h3 style={{ fontSize: '12px', color: '#686977', fontWeight: 'normal', marginBottom: '10px' }}>Failed Deployments</h3>
+                {deployments.filter((d) => d.status === 'failed').map((d) => (
+                  <div
+                    key={d.id}
+                    onClick={() => navigate(`/deployments/${d.id}`)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 14px', background: '#fef2f2', border: '1px solid #fca5a5',
+                      borderRadius: '6px', marginBottom: '8px', cursor: 'pointer', fontSize: '12px',
+                    }}
+                  >
+                    <span>❌ <strong>{d.repo_url.split('/').pop()}</strong></span>
+                    <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>{d.id.slice(0, 8)}</span>
+                    <span style={{ color: '#9ca3af' }}>{new Date(d.created_at + 'Z').toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
       </main>
 
