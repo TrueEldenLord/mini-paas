@@ -288,7 +288,7 @@ export default function DeploymentList() {
             </div>
 
             {countOf('failed') > 0 && (
-              <div>
+              <div style={{ marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '12px', color: '#686977', fontWeight: 'normal', marginBottom: '10px' }}>Failed Deployments</h3>
                 {deployments.filter((d) => d.status === 'failed').map((d) => (
                   <div
@@ -303,6 +303,47 @@ export default function DeploymentList() {
                     <span>❌ <strong>{d.repo_url.split('/').pop()}</strong></span>
                     <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>{d.id.slice(0, 8)}</span>
                     <span style={{ color: '#9ca3af' }}>{new Date(d.created_at + 'Z').toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {countOf('running') > 0 && (
+              <div>
+                <h3 style={{ fontSize: '12px', color: '#686977', fontWeight: 'normal', marginBottom: '10px' }}>☀️ Live Apps</h3>
+                {deployments.filter((d) => d.status === 'running').map((d) => (
+                  <div
+                    key={d.id}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 14px', background: '#f0fdf4', border: '1px solid #86efac',
+                      borderRadius: '6px', marginBottom: '8px', fontSize: '12px',
+                    }}
+                  >
+                    <span
+                      onClick={() => navigate(`/deployments/${d.id}`)}
+                      style={{ cursor: 'pointer', fontWeight: 600, color: '#15803d' }}
+                    >
+                      {d.repo_url.split('/').pop()}
+                    </span>
+                    <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>{d.id.slice(0, 8)}</span>
+                    {d.public_url ? (
+                      <a
+                        href={d.public_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: '#16a34a', fontWeight: 600, textDecoration: 'none',
+                          border: '1px solid #86efac', borderRadius: '4px', padding: '3px 10px',
+                          fontSize: '11px',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Open ↗
+                      </a>
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontSize: '11px' }}>URL pending</span>
+                    )}
                   </div>
                 ))}
               </div>
