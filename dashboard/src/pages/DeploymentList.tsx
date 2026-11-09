@@ -5,9 +5,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDeploymentStore } from '../store/deployments';
+import { setToken } from '../api/client';
 
 function logout(navigate: (path: string) => void) {
-  localStorage.removeItem('access_token');
+  setToken(null);
   navigate('/login');
 }
 

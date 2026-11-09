@@ -1,7 +1,8 @@
 import { Navigate } from 'react-router-dom';
+import { getToken } from '../api/client';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('access_token');
+  const token = getToken();
   if (!token) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }

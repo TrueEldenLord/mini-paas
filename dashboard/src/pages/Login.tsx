@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/client';
+import { login, setToken } from '../api/client';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function Login() {
     setError('');
     try {
       const { access_token } = await login(email, password);
-      localStorage.setItem('access_token', access_token);
+      setToken(access_token);
       navigate('/');
     } catch {
       setError('Invalid email or password.');
@@ -86,7 +86,7 @@ export default function Login() {
           <div style={{ marginTop: '16px', borderTop: '1px solid #e4e4e8', paddingTop: '14px' }}>
             <p style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '8px' }}>Dev only</p>
             <button
-              onClick={() => { setEmail('alex@test.com'); setPassword('testpass123'); }}
+              onClick={() => { setEmail('test@test.com'); setPassword('testpass123'); }}
               style={{
                 width: '100%', padding: '7px', background: 'transparent', color: '#9ca3af',
                 border: '1px dashed #d0d0d8', borderRadius: '3px', fontSize: '12px', cursor: 'pointer',

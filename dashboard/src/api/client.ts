@@ -5,9 +5,13 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
 });
 
+let _token: string | null = null;
+export const setToken = (token: string | null) => { _token = token; };
+export const getToken = () => _token;
+
 // Attach JWT token to every request if present
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
+  const token = _token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
