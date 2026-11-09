@@ -169,7 +169,7 @@ export default function DeploymentList() {
                     {d.repo_url}
                   </span>
                   <span style={{ fontSize: '10px', color: '#aaa', display: 'block', marginTop: '3px' }}>
-                    {new Date(d.created_at).toLocaleString()}
+                    {new Date(d.created_at + 'Z').toLocaleString()}
                   </span>
                 </div>
               </div>

@@ -247,7 +247,7 @@ export default function DeploymentDetail() {
 
                     <div className="info-item">
                         <span>Created</span>
-                        <strong>{new Date(deployment.created_at).toLocaleString()}</strong>
+                        <strong>{new Date(deployment.created_at + 'Z').toLocaleString()}</strong>
                     </div>
                 </div>
             </section>
