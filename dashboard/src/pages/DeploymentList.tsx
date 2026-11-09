@@ -295,14 +295,15 @@ export default function DeploymentList() {
                     key={d.id}
                     onClick={() => navigate(`/deployments/${d.id}`)}
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      display: 'grid', gridTemplateColumns: '1fr 100px 160px',
+                      alignItems: 'center', gap: '12px',
                       padding: '10px 14px', background: '#fef2f2', border: '1px solid #fca5a5',
                       borderRadius: '6px', marginBottom: '8px', cursor: 'pointer', fontSize: '12px',
                     }}
                   >
-                    <span>❌ <strong>{d.repo_url.split('/').pop()}</strong></span>
-                    <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>{d.id.slice(0, 8)}</span>
-                    <span style={{ color: '#9ca3af' }}>{new Date(d.created_at + 'Z').toLocaleString()}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>❌ <strong>{d.repo_url.split('/').pop()}</strong></span>
+                    <span style={{ color: '#9ca3af', fontFamily: 'monospace', textAlign: 'center' }}>{d.id.slice(0, 8)}</span>
+                    <span style={{ color: '#9ca3af', textAlign: 'right' }}>{new Date(d.created_at + 'Z').toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -315,18 +316,19 @@ export default function DeploymentList() {
                   <div
                     key={d.id}
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      display: 'grid', gridTemplateColumns: '1fr 100px auto',
+                      alignItems: 'center', gap: '12px',
                       padding: '10px 14px', background: '#f0fdf4', border: '1px solid #86efac',
                       borderRadius: '6px', marginBottom: '8px', fontSize: '12px',
                     }}
                   >
                     <span
                       onClick={() => navigate(`/deployments/${d.id}`)}
-                      style={{ cursor: 'pointer', fontWeight: 600, color: '#15803d' }}
+                      style={{ cursor: 'pointer', fontWeight: 600, color: '#15803d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
                       {d.repo_url.split('/').pop()}
                     </span>
-                    <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>{d.id.slice(0, 8)}</span>
+                    <span style={{ color: '#9ca3af', fontFamily: 'monospace', textAlign: 'center' }}>{d.id.slice(0, 8)}</span>
                     {d.public_url ? (
                       <div style={{ display: 'flex', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
                         <a
