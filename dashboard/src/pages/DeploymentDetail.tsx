@@ -167,7 +167,9 @@ export default function DeploymentDetail() {
                             fontSize: '12px', cursor: 'pointer', fontWeight: 600,
                         }}
                     >
-                        Delete Deployment
+                        {deployment.status === 'queued' || deployment.status === 'building'
+                            ? '✕ Cancel Deployment'
+                            : 'Delete Deployment'}
                     </button>
                 </div>
             </div>
@@ -181,9 +183,13 @@ export default function DeploymentDetail() {
                         background: '#fff', borderRadius: '12px', padding: '28px',
                         width: '380px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
                     }}>
-                        <h2 style={{ fontSize: '17px', color: '#dc2626', marginBottom: '8px' }}>Delete Deployment?</h2>
+                        <h2 style={{ fontSize: '17px', color: '#dc2626', marginBottom: '8px' }}>
+                            {deployment.status === 'queued' || deployment.status === 'building' ? 'Cancel Deployment?' : 'Delete Deployment?'}
+                        </h2>
                         <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px' }}>
-                            This will permanently remove the deployment and stop the running container.
+                            {deployment.status === 'queued' || deployment.status === 'building'
+                                ? 'This will cancel the deployment and remove it from the queue.'
+                                : 'This will permanently remove the deployment and stop the running container.'}
                         </p>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button
