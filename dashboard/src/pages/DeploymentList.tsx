@@ -30,6 +30,15 @@ const STATUS_BG: Record<string, string> = {
   failed: '#fef2f2',
 };
 
+const STATUS_EMOJI: Record<string, string> = {
+  queued: '⏳',
+  building: '⚙️',
+  running: '☀️',
+  failed: '❌',
+};
+
+type StatusFilter = 'all' | 'running' | 'building' | 'failed' | 'queued';
+
 export default function DeploymentList() {
   const { deployments, fetchDeployments, submitDeployment, loading, error } = useDeploymentStore();
   const { username, email, clearUser } = useAuthStore();
@@ -38,9 +47,16 @@ export default function DeploymentList() {
   const [repoUrl, setRepoUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const displayName = username || (email ? email.split('@')[0] : 'User');
   const displayEmail = email || '';
+
+  const filteredDeployments = statusFilter === 'all'
+    ? deployments
+    : deployments.filter((d) => d.status === statusFilter);
+
+  const countOf = (s: string) => deployments.filter((d) => d.status === s).length;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,7 +89,7 @@ export default function DeploymentList() {
       <aside className="sidebar">
 
         <div className="dashboard-logo">
-          <h2>Mini PaaS</h2>
+          <h2>☀️ Helios</h2>
         </div>
 
         <div className="user-profile" style={{ justifyContent: 'space-between', flexDirection: 'column', alignItems: 'flex-start', height: 'auto', padding: '12px 14px', gap: '2px' }}>
@@ -113,7 +129,7 @@ export default function DeploymentList() {
             ) : (
               deployments.slice(0, 8).map((d) => (
                 <li key={d.id} onClick={() => navigate(`/deployments/${d.id}`)}>
-                  {d.repo_url.split('/').pop()}
+                  {STATUS_EMOJI[d.status]} {d.repo_url.split('/').pop()}
                 </li>
               ))
             )}
@@ -128,21 +144,38 @@ export default function DeploymentList() {
         {/* top header */}
         <header className="top-header">
           <div className="app-name" style={{ fontWeight: 600, fontSize: '14px', color: '#1e518c' }}>
-            All Deployments
+            Deployments
           </div>
           <div className="header-right" style={{ color: '#9ca3af', fontSize: '12px' }}>
             {deployments.length} total
           </div>
         </header>
 
-        {/* navigation */}
+        {/* filter tabs */}
         <nav className="navigation">
-          <a href="#">Resources</a>
-          <a href="#">Code</a>
-          <a href="#" className="active">Metrics</a>
-          <a href="#">Activity</a>
-          <a href="#">Access</a>
-          <a href="#">Settings</a>
+          {([
+            { key: 'all',      label: '🗂️ All',          count: deployments.length },
+            { key: 'running',  label: '☀️ Running',       count: countOf('running') },
+            { key: 'building', label: '⚙️ Building',      count: countOf('building') },
+            { key: 'queued',   label: '⏳ Queued',        count: countOf('queued') },
+            { key: 'failed',   label: '❌ Failed',        count: countOf('failed') },
+          ] as { key: StatusFilter; label: string; count: number }[]).map(({ key, label, count }) => (
+            <a
+              key={key}
+              href="#"
+              className={statusFilter === key ? 'active' : ''}
+              onClick={(e) => { e.preventDefault(); setStatusFilter(key); }}
+            >
+              {label}
+              <span style={{
+                marginLeft: '5px', background: statusFilter === key ? '#2f80c9' : '#e5e7eb',
+                color: statusFilter === key ? '#fff' : '#6b7280',
+                borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 600,
+              }}>
+                {count}
+              </span>
+            </a>
+          ))}
         </nav>
 
         {/* deployment cards */}
@@ -154,6 +187,11 @@ export default function DeploymentList() {
           )}
           {!error && loading && deployments.length === 0 && (
             <p style={{ color: '#9ca3af', fontSize: '12px', padding: '4px' }}>Loading…</p>
+          )}
+          {!error && !loading && filteredDeployments.length === 0 && deployments.length > 0 && (
+            <div style={{ width: '100%', textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>No {statusFilter} deployments.</p>
+            </div>
           )}
           {!error && !loading && deployments.length === 0 && (
             <div style={{
@@ -179,7 +217,7 @@ export default function DeploymentList() {
               </button>
             </div>
           )}
-          {deployments.map((d) => (
+          {filteredDeployments.map((d) => (
             <div
               key={d.id}
               className="status-card"
@@ -198,7 +236,7 @@ export default function DeploymentList() {
                   background: STATUS_COLORS[d.status] ?? '#9ca3af',
                   color: '#fff', padding: '1px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 600,
                 }}>
-                  {d.status}
+                  {STATUS_EMOJI[d.status]} {d.status}
                 </span>
               </div>
               <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
