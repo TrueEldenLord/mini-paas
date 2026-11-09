@@ -108,8 +108,8 @@ def process(deployment):
 
         try:
             update_sub_status(deployment_id, "cloning")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(f"Deployment {deployment_id}: could not set sub_status to cloning: {exc}")
         clone_repo(repo_url, tmp_dir)
 
         if not os.path.exists(os.path.join(tmp_dir, "Dockerfile")):
@@ -117,14 +117,14 @@ def process(deployment):
 
         try:
             update_sub_status(deployment_id, "building")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(f"Deployment {deployment_id}: could not set sub_status to building: {exc}")
         log_lines = build_image(tmp_dir, deployment_id)
 
         try:
             update_sub_status(deployment_id, "pushing")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(f"Deployment {deployment_id}: could not set sub_status to pushing: {exc}")
         push_image(deployment_id)
 
         update_logs(deployment_id, "\n".join(log_lines))
