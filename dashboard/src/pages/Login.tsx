@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { login, setToken } from '../api/client';
 
 export default function Login() {
@@ -81,6 +81,11 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <p style={{ marginTop: '16px', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
+          Don't have an account?{' '}
+          <Link to="/register" style={{ color: '#2563a6' }}>Create one</Link>
+        </p>
 
         {import.meta.env.DEV && (
           <div style={{ marginTop: '16px', borderTop: '1px solid #e4e4e8', paddingTop: '14px' }}>
