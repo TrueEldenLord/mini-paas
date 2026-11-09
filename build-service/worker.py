@@ -54,6 +54,18 @@ def update_logs(deployment_id, logs):
     response.raise_for_status()
 
 
+def update_sub_status(deployment_id, sub_status):
+    try:
+        response = requests.patch(
+            f"{API_URL}/deployments/{deployment_id}/sub-status",
+            json={"sub_status": sub_status},
+            headers=_auth_headers(),
+        )
+        response.raise_for_status()
+    except Exception as exc:
+        logger.warning(f"Deployment {deployment_id}: could not set sub_status to {sub_status}: {exc}")
+
+
 def clone_repo(repo_url, dest_path):
     git.Repo.clone_from(repo_url, dest_path)
 
@@ -93,12 +105,26 @@ def process(deployment):
 
     try:
         update_status(deployment_id, "building")
+
+        try:
+            update_sub_status(deployment_id, "cloning")
+        except Exception:
+            pass
         clone_repo(repo_url, tmp_dir)
 
         if not os.path.exists(os.path.join(tmp_dir, "Dockerfile")):
             raise FileNotFoundError("No Dockerfile found at repo root")
 
+        try:
+            update_sub_status(deployment_id, "building")
+        except Exception:
+            pass
         log_lines = build_image(tmp_dir, deployment_id)
+
+        try:
+            update_sub_status(deployment_id, "pushing")
+        except Exception:
+            pass
         push_image(deployment_id)
 
         update_logs(deployment_id, "\n".join(log_lines))

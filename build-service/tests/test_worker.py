@@ -172,6 +172,7 @@ def test_push_image_raises_on_api_error():
 def test_process_happy_path():
     deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
     with patch("worker.update_status") as mock_status, \
+         patch("worker.update_sub_status"), \
          patch("worker.clone_repo") as mock_clone, \
          patch("worker.os.path.exists", return_value=True), \
          patch("worker.build_image", return_value=["Step 1", "Step 2"]) as mock_build, \
@@ -195,6 +196,7 @@ def test_process_clone_failure_marks_failed_and_cleans_up():
     import git as git_module
     deployment = {"id": "deploy-123", "repo_url": "https://github.com/bad/repo.git"}
     with patch("worker.update_status") as mock_status, \
+         patch("worker.update_sub_status"), \
          patch("worker.clone_repo",
                side_effect=git_module.exc.GitCommandError("clone", 128)), \
          patch("worker.update_logs") as mock_logs, \
@@ -211,6 +213,7 @@ def test_process_clone_failure_marks_failed_and_cleans_up():
 def test_process_no_dockerfile_marks_failed():
     deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
     with patch("worker.update_status") as mock_status, \
+         patch("worker.update_sub_status"), \
          patch("worker.clone_repo"), \
          patch("worker.os.path.exists", return_value=False), \
          patch("worker.build_image") as mock_build, \
@@ -227,6 +230,7 @@ def test_process_no_dockerfile_marks_failed():
 def test_process_build_failure_marks_failed():
     deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
     with patch("worker.update_status") as mock_status, \
+         patch("worker.update_sub_status"), \
          patch("worker.clone_repo"), \
          patch("worker.os.path.exists", return_value=True), \
          patch("worker.build_image",
@@ -270,6 +274,7 @@ def test_process_api_failure_during_error_reporting_does_not_raise():
     import git as git_module
     deployment = {"id": "deploy-123", "repo_url": "https://github.com/bad/repo.git"}
     with patch("worker.update_status") as mock_status, \
+         patch("worker.update_sub_status"), \
          patch("worker.clone_repo",
                side_effect=git_module.exc.GitCommandError("clone", 128)), \
          patch("worker.update_logs",
@@ -280,3 +285,53 @@ def test_process_api_failure_during_error_reporting_does_not_raise():
     # update_status("building") was called, then the clone failed,
     # then update_status("failed") was called but update_logs raised — no exception propagated
     mock_status.assert_any_call("deploy-123", "building")
+
+
+def test_update_sub_status_calls_correct_endpoint():
+    mock_resp = MagicMock()
+    with patch("worker.requests.patch", return_value=mock_resp) as mock_patch:
+        worker.update_sub_status("abc-123", "cloning")
+    mock_patch.assert_called_once_with(
+        "http://localhost:8000/deployments/abc-123/sub-status",
+        json={"sub_status": "cloning"},
+        headers={"X-Service-API-Key": worker.SERVICE_API_KEY},
+    )
+
+
+def test_update_sub_status_sends_auth_header():
+    mock_resp = MagicMock()
+    with patch("worker.requests.patch", return_value=mock_resp) as mock_patch:
+        worker.update_sub_status("abc-123", "building")
+    _, kwargs = mock_patch.call_args
+    assert kwargs["headers"]["X-Service-API-Key"] == worker.SERVICE_API_KEY
+
+
+def test_process_calls_sub_status_at_each_phase():
+    deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
+    with patch("worker.update_status"), \
+         patch("worker.update_sub_status") as mock_sub, \
+         patch("worker.clone_repo"), \
+         patch("worker.os.path.exists", return_value=True), \
+         patch("worker.build_image", return_value=[]), \
+         patch("worker.push_image"), \
+         patch("worker.update_logs"), \
+         patch("worker.shutil.rmtree"):
+        worker.process(deployment)
+
+    sub_calls = [call[0][1] for call in mock_sub.call_args_list]
+    assert sub_calls == ["cloning", "building", "pushing"]
+
+
+def test_process_sub_status_failure_does_not_fail_deployment():
+    deployment = {"id": "deploy-123", "repo_url": "https://github.com/user/repo.git"}
+    with patch("worker.update_status") as mock_status, \
+         patch("worker.update_sub_status", side_effect=Exception("API down")), \
+         patch("worker.clone_repo"), \
+         patch("worker.os.path.exists", return_value=True), \
+         patch("worker.build_image", return_value=[]), \
+         patch("worker.push_image"), \
+         patch("worker.update_logs"), \
+         patch("worker.shutil.rmtree"):
+        worker.process(deployment)
+
+    mock_status.assert_any_call("deploy-123", "running")
