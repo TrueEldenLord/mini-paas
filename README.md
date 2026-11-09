@@ -132,6 +132,77 @@ Open a pull request on GitHub when you're ready for review. Don't push directly 
 
 ---
 
+## Testing Plan
+
+The completed testing plan is in the repo root. Open either file directly after cloning:
+
+| File | Format |
+|---|---|
+| `Helios_Test_Plan.docx` | Word document — full test case table with preconditions, steps, and expected results |
+| `Helios_Test_Plan.pptx` | PowerPoint — slide summary of all 15 test cases |
+
+All 15 test cases verified **PASS** on November 8, 2026.
+
+---
+
+## Running the Project
+
+### First-Time Setup (run once)
+
+```bash
+# Initialize Docker Swarm
+docker swarm init
+
+# Create the shared overlay network
+docker network create --driver overlay --attachable helios-web
+```
+
+### Start the Stack
+
+```bash
+# Terminal 1 — start all backend services
+cd infra
+docker compose up -d
+
+# Terminal 2 — start the dashboard
+cd dashboard
+npm run dev
+```
+
+### Stop the Stack
+
+```bash
+cd infra
+docker compose down
+```
+
+### View Logs
+
+```bash
+# All services
+docker compose logs -f
+
+# Single service
+docker compose logs -f api
+docker compose logs -f build-service
+docker compose logs -f scheduler
+```
+
+---
+
+## Access Points
+
+| Service           | URL                        |
+|-------------------|----------------------------|
+| Dashboard         | http://localhost:5173       |
+| API               | http://localhost:8000       |
+| API docs (Swagger)| http://localhost:8000/docs  |
+| Traefik dashboard | http://localhost:8080       |
+
+**Test account:** `test@test.com` / `testpass123`
+
+---
+
 ## Further Reading
 
 - `/api/README.md` — Role 1 setup and tasks
