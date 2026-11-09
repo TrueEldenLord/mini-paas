@@ -9,16 +9,6 @@ import { useDeploymentStore } from "../store/deployments";
 import type { Deployment } from "../types";
 import "./DeploymentDetail.css";
 
-const MOCK_DEPLOYMENT: Deployment = {
-    id: "00000000-0000-0000-0000-000000000000",
-    repo_url: "github.com/example/helios-demo",
-    status: "building",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    container_id: null,
-    public_url: null,
-    logs: "[10:30:01] Deployment initialized.\n[10:30:02] Cloning GitHub repository...\n[10:30:04] Repository cloned successfully.\n[10:30:05] Preparing Docker build...\n[10:30:08] Installing dependencies...\n[10:30:12] Building Docker image...\n[10:30:15] Build in progress..."
-};
 
 const statusDetails = {
     queued: {
@@ -50,10 +40,8 @@ export default function DeploymentDetail() {
 
     const deploymentId = id ?? "";
 
-    const [deployment, setDeployment] = useState<Deployment>({
-        ...MOCK_DEPLOYMENT,
-        id: deploymentId
-    });
+    const [deployment, setDeployment] = useState<Deployment | null>(null);
+    const [loading, setLoading] = useState(true);
 
     const [connectionError, setConnectionError] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -84,10 +72,12 @@ export default function DeploymentDetail() {
                 if (active) {
                     setDeployment(data);
                     setConnectionError(false);
+                    setLoading(false);
                 }
             } catch {
                 if (active) {
                     setConnectionError(true);
+                    setLoading(false);
                 }
             }
         };
@@ -112,6 +102,22 @@ export default function DeploymentDetail() {
             logContainer.scrollTop = logContainer.scrollHeight;
         }
     }, [deployment.logs]);
+
+    if (loading) {
+        return (
+            <div className="deployment-page">
+                <p style={{ padding: '40px', color: '#9ca3af', fontSize: '13px' }}>Loading…</p>
+            </div>
+        );
+    }
+
+    if (!deployment) {
+        return (
+            <div className="deployment-page">
+                <p style={{ padding: '40px', color: '#ef4444', fontSize: '13px' }}>Could not load deployment.</p>
+            </div>
+        );
+    }
 
     const currentStatus = statusDetails[deployment.status]
         ? deployment.status

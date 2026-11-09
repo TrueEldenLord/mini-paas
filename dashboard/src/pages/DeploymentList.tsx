@@ -169,6 +169,9 @@ export default function DeploymentList() {
                     {d.repo_url}
                   </span>
                   <span style={{ fontSize: '10px', color: '#aaa', display: 'block', marginTop: '3px' }}>
+                    {d.id.slice(0, 8)}
+                  </span>
+                  <span style={{ fontSize: '10px', color: '#aaa', display: 'block', marginTop: '2px' }}>
                     {new Date(d.created_at + 'Z').toLocaleString()}
                   </span>
                 </div>
