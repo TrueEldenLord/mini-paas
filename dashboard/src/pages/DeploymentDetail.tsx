@@ -95,8 +95,8 @@ export default function DeploymentDetail() {
         // Fetch immediately when the page loads
         fetchDeployment();
 
-        // Repeat every 5 seconds
-        const interval = setInterval(fetchDeployment, 5000);
+        const pollInterval = Number(import.meta.env.VITE_POLL_INTERVAL_MS) || 5000;
+        const interval = setInterval(fetchDeployment, pollInterval);
 
         return () => {
             active = false;
@@ -243,6 +243,11 @@ export default function DeploymentDetail() {
                     <div className="info-item">
                         <span>Deployment ID</span>
                         <strong>#{deployment.id}</strong>
+                    </div>
+
+                    <div className="info-item">
+                        <span>Created</span>
+                        <strong>{new Date(deployment.created_at).toLocaleString()}</strong>
                     </div>
                 </div>
             </section>

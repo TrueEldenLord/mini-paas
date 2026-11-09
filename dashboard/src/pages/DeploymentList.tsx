@@ -31,7 +31,10 @@ export default function DeploymentList() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!repoUrl.trim()) return;
+    if (!repoUrl.trim()) {
+      setSubmitError('Repository URL is required.');
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -164,6 +167,9 @@ export default function DeploymentList() {
                 <div className="card-content" style={{ marginTop: '6px' }}>
                   <span style={{ fontSize: '10px', color: '#777', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {d.repo_url}
+                  </span>
+                  <span style={{ fontSize: '10px', color: '#aaa', display: 'block', marginTop: '3px' }}>
+                    {new Date(d.created_at).toLocaleString()}
                   </span>
                 </div>
               </div>
