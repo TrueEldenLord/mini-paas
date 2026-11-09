@@ -9,6 +9,7 @@ export interface Deployment {
   container_id: string | null;
   public_url: string | null;
   logs: string | null;
+  sub_status: 'cloning' | 'building' | 'pushing' | null;
 }
 
 export interface CreateDeploymentPayload {

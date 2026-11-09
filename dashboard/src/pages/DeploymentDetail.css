@@ -318,3 +318,141 @@
         flex-direction: column;
     }
 }
+
+/* ── Build Progress Tracker ── */
+
+.build-progress {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5eaf0;
+}
+
+.build-progress-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+}
+
+.bp-steps {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.bp-step-group {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.bp-step-group:last-child {
+    flex: 0;
+}
+
+.bp-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.4;
+}
+
+.bp-step--done,
+.bp-step--active {
+    opacity: 1;
+}
+
+.bp-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    border: 2px solid #d1d5db;
+    background: #fff;
+    color: #9ca3af;
+    transition: all 0.3s;
+}
+
+.bp-step--done .bp-circle {
+    background: #27a65a;
+    border-color: #27a65a;
+    color: #fff;
+}
+
+.bp-step--active .bp-circle {
+    background: #1e518c;
+    border-color: #1e518c;
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(30, 81, 140, 0.15);
+}
+
+.bp-label {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 7px;
+    font-weight: 500;
+}
+
+.bp-step--done .bp-label { color: #27a65a; }
+.bp-step--active .bp-label { color: #1e518c; font-weight: 700; }
+
+.bp-connector {
+    height: 2px;
+    flex: 1;
+    background: #e5e7eb;
+    margin-bottom: 24px;
+    transition: background 0.3s;
+}
+
+.bp-connector--done {
+    background: #27a65a;
+}
+
+.bp-bar-wrap {
+    background: #e5eaf0;
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.bp-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1e518c, #3b82f6);
+    animation: bp-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes bp-sweep {
+    0%   { width: 20%; margin-left: 0%; }
+    50%  { width: 45%; margin-left: 25%; }
+    100% { width: 20%; margin-left: 80%; }
+}
+
+.bp-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bp-timer {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.bp-timer strong {
+    color: #1e518c;
+    font-size: 13px;
+}
+
+.bp-hint {
+    font-size: 11px;
+    color: #9ca3af;
+    font-style: italic;
+}

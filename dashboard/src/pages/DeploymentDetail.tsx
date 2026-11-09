@@ -33,6 +33,70 @@ const statusDetails = {
     }
 };
 
+const BUILD_STEPS = [
+  { key: 'cloning',  label: 'Clone' },
+  { key: 'building', label: 'Build' },
+  { key: 'pushing',  label: 'Push'  },
+] as const;
+
+const STEP_HINTS: Record<string, string> = {
+  cloning:  'Large repos may take several minutes to clone',
+  building: 'Running Dockerfile instructions',
+  pushing:  'Almost done',
+};
+
+function BuildProgress({ subStatus }: { subStatus: string | null }) {
+  const [elapsed, setElapsed] = useState(0);
+  const startRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    startRef.current = Date.now();
+    setElapsed(0);
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeIndex = BUILD_STEPS.findIndex(s => s.key === subStatus);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = String(elapsed % 60).padStart(2, '0');
+  const hint = subStatus ? STEP_HINTS[subStatus] : '';
+
+  return (
+    <div className="build-progress">
+      <p className="build-progress-title">Build Progress</p>
+
+      <div className="bp-steps">
+        {BUILD_STEPS.map((step, i) => {
+          const isDone   = i < activeIndex;
+          const isActive = i === activeIndex;
+          return (
+            <div key={step.key} className="bp-step-group">
+              <div className={`bp-step ${isDone ? 'bp-step--done' : ''} ${isActive ? 'bp-step--active' : ''}`}>
+                <div className="bp-circle">{isDone ? '✓' : i + 1}</div>
+                <div className="bp-label">{step.label}</div>
+              </div>
+              {i < BUILD_STEPS.length - 1 && (
+                <div className={`bp-connector ${isDone ? 'bp-connector--done' : ''}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="bp-bar-wrap">
+        <div className="bp-bar-fill" />
+      </div>
+
+      <div className="bp-meta">
+        <span className="bp-timer">Elapsed: <strong>{minutes}m {seconds}s</strong></span>
+        <span className="bp-hint">{hint}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function DeploymentDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -244,6 +308,10 @@ export default function DeploymentDetail() {
                         API unavailable. Displaying demo data while waiting
                         for the connection.
                     </p>
+                )}
+
+                {deployment.status === 'building' && (
+                    <BuildProgress subStatus={deployment.sub_status} />
                 )}
             </section>
 
