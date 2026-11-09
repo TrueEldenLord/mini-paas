@@ -48,6 +48,10 @@ class LogsUpdate(BaseModel):
     logs: str
 
 
+class SubStatusUpdate(BaseModel):
+    sub_status: str
+
+
 class RuntimeUpdate(BaseModel):
     container_id: Optional[str] = None
     public_url: Optional[str] = None
@@ -193,6 +197,32 @@ def update_logs(
     db.commit()
     db.refresh(deployment)
     logger.info(f"Deployment {deployment.id} logs updated ({len(body.logs)} chars)")
+    return deployment
+
+
+VALID_SUB_STATUSES = {"cloning", "building", "pushing"}
+
+
+@app.patch("/deployments/{deployment_id}/sub-status")
+def update_sub_status(
+    deployment_id: uuid.UUID,
+    body: SubStatusUpdate,
+    db: Session = Depends(get_db),
+    caller: str = Depends(get_current_caller),
+):
+    if body.sub_status not in VALID_SUB_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid sub_status '{body.sub_status}'. Must be one of: {', '.join(VALID_SUB_STATUSES)}"
+        )
+    deployment = db.query(models.Deployment).filter(models.Deployment.id == deployment_id).first()
+    if deployment is None:
+        raise HTTPException(status_code=404, detail="Deployment not found")
+    deployment.sub_status = body.sub_status
+    deployment.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(deployment)
+    logger.info(f"Deployment {deployment.id} sub_status set to {body.sub_status}")
     return deployment
 
 

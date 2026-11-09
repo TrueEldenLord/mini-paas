@@ -216,3 +216,55 @@ def test_update_runtime_without_credentials():
     deployment_id = _create_deployment()
     response = client.patch(f"/deployments/{deployment_id}/runtime", json={"container_id": "x"})
     assert response.status_code == 401
+
+
+def test_update_sub_status_valid():
+    deployment_id = _create_deployment()
+    for value in ("cloning", "building", "pushing"):
+        response = client.patch(
+            f"/deployments/{deployment_id}/sub-status",
+            json={"sub_status": value},
+            headers=SERVICE_HEADERS,
+        )
+        assert response.status_code == 200
+        assert response.json()["sub_status"] == value
+
+
+def test_update_sub_status_invalid():
+    deployment_id = _create_deployment()
+    response = client.patch(
+        f"/deployments/{deployment_id}/sub-status",
+        json={"sub_status": "banana"},
+        headers=SERVICE_HEADERS,
+    )
+    assert response.status_code == 400
+
+
+def test_update_sub_status_not_found():
+    fake_id = "00000000-0000-0000-0000-000000000000"
+    response = client.patch(
+        f"/deployments/{fake_id}/sub-status",
+        json={"sub_status": "cloning"},
+        headers=SERVICE_HEADERS,
+    )
+    assert response.status_code == 404
+
+
+def test_update_sub_status_without_credentials():
+    deployment_id = _create_deployment()
+    response = client.patch(
+        f"/deployments/{deployment_id}/sub-status",
+        json={"sub_status": "cloning"},
+    )
+    assert response.status_code == 401
+
+
+def test_create_deployment_includes_sub_status_field():
+    response = client.post(
+        "/deployments",
+        json={"repo_url": "https://github.com/test/repo"},
+        headers=AUTH_HEADERS,
+    )
+    assert response.status_code == 200
+    assert "sub_status" in response.json()
+    assert response.json()["sub_status"] is None

@@ -16,6 +16,7 @@ class Deployment(Base):
     container_id = Column(String, nullable=True)
     public_url = Column(String, nullable=True)
     logs = Column(String, nullable=True)
+    sub_status = Column(String, nullable=True)  # cloning | building | pushing | null
 
 class User(Base):
     __tablename__ = "users"
