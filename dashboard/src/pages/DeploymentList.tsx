@@ -49,8 +49,8 @@ export default function DeploymentList() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-  const displayName = username || (email ? email.split('@')[0] : 'User');
-  const displayEmail = email || '';
+  const displayName = username || email || 'User';
+  const displayEmail = username ? email : '';
 
   const filteredDeployments = statusFilter === 'all'
     ? deployments
