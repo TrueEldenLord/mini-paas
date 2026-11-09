@@ -176,6 +176,8 @@ def update_status(
     if deployment is None:
         raise HTTPException(status_code=404, detail="Deployment not found")
     deployment.status = status
+    if status in ("running", "failed"):
+        deployment.sub_status = None
     db.commit()
     db.refresh(deployment)
     logger.info(f"Deployment {deployment.id} status changed to {status}")

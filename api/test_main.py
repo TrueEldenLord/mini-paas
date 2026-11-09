@@ -268,3 +268,21 @@ def test_create_deployment_includes_sub_status_field():
     assert response.status_code == 200
     assert "sub_status" in response.json()
     assert response.json()["sub_status"] is None
+
+
+def test_update_status_to_running_clears_sub_status():
+    deployment_id = _create_deployment()
+    # Set a sub_status first
+    client.patch(f"/deployments/{deployment_id}/sub-status", json={"sub_status": "pushing"}, headers=SERVICE_HEADERS)
+    # Transition to running
+    response = client.patch(f"/deployments/{deployment_id}/status", json={"status": "running"}, headers=SERVICE_HEADERS)
+    assert response.status_code == 200
+    assert response.json()["sub_status"] is None
+
+
+def test_update_status_to_failed_clears_sub_status():
+    deployment_id = _create_deployment()
+    client.patch(f"/deployments/{deployment_id}/sub-status", json={"sub_status": "cloning"}, headers=SERVICE_HEADERS)
+    response = client.patch(f"/deployments/{deployment_id}/status", json={"status": "failed"}, headers=SERVICE_HEADERS)
+    assert response.status_code == 200
+    assert response.json()["sub_status"] is None
