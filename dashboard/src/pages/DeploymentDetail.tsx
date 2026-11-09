@@ -135,7 +135,7 @@ export default function DeploymentDetail() {
                 <div>
                     <p className="deployment-breadcrumb">
                         <span onClick={() => navigate('/')} style={{ cursor: 'pointer', color: '#1e518c' }}>Dashboard</span>
-                        {' / Deployments / '}#{deployment.id}
+                        {' / Deployments / '}#{deployment.id.slice(0, 8)}
                     </p>
 
                     <h1>{deployment.repo_url}</h1>
@@ -149,6 +149,16 @@ export default function DeploymentDetail() {
                     <span className="deployment-id">
                         ID: #{deployment.id}
                     </span>
+                    <button
+                        onClick={() => navigate('/', { state: { prefillUrl: deployment.repo_url } })}
+                        style={{
+                            padding: '7px 14px', background: '#e8f2fc', color: '#1e518c',
+                            border: '1px solid #b8d4ee', borderRadius: '6px',
+                            fontSize: '12px', cursor: 'pointer', fontWeight: 600,
+                        }}
+                    >
+                        🔄 Redeploy
+                    </button>
                     <button
                         onClick={() => setConfirmDelete(true)}
                         style={{

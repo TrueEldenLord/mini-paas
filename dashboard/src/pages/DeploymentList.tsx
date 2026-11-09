@@ -3,7 +3,7 @@
 // The rest of the page (nav, alerts, charts) is yours to build out.
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDeploymentStore } from '../store/deployments';
 import { useAuthStore } from '../store/auth';
 import { setToken } from '../api/client';
@@ -43,6 +43,7 @@ export default function DeploymentList() {
   const { deployments, fetchDeployments, submitDeployment, loading, error } = useDeploymentStore();
   const { username, email, clearUser } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
   const [repoUrl, setRepoUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -81,6 +82,15 @@ export default function DeploymentList() {
     fetchDeployments();
     const interval = setInterval(fetchDeployments, POLL_INTERVAL);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const prefill = (location.state as any)?.prefillUrl;
+    if (prefill) {
+      setRepoUrl(prefill);
+      setShowModal(true);
+      window.history.replaceState({}, '');
+    }
   }, []);
 
   return (
