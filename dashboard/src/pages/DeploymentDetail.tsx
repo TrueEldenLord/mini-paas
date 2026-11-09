@@ -101,7 +101,7 @@ export default function DeploymentDetail() {
         if (logContainer) {
             logContainer.scrollTop = logContainer.scrollHeight;
         }
-    }, [deployment.logs]);
+    }, [deployment?.logs]);
 
     if (loading) {
         return (
