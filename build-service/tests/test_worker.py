@@ -141,7 +141,7 @@ def test_push_image_dockerhub():
     mock_client.images.get.return_value.tag.assert_called_once_with(
         "testuser/mini-paas:deploy-123"
     )
-    mock_client.images.push.assert_called_once_with("testuser/mini-paas:deploy-123")
+    mock_client.images.push.assert_called_once_with("testuser/mini-paas:deploy-123", stream=True, decode=True)
 
 
 def test_push_image_local_registry():
@@ -155,7 +155,7 @@ def test_push_image_local_registry():
         "localhost:5000/mini-paas:deploy-123"
     )
     mock_client.images.push.assert_called_once_with(
-        "localhost:5000/mini-paas:deploy-123"
+        "localhost:5000/mini-paas:deploy-123", stream=True, decode=True
     )
 
 
