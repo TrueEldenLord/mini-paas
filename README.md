@@ -132,6 +132,13 @@ Open a pull request on GitHub when you're ready for review. Don't push directly 
 
 ---
 
+## Features
+
+### Build Progress Tracker
+When a deployment is building, the deployment detail page shows a live 3-step progress tracker (Clone → Build → Push) so you always know exactly which phase is running. Includes an elapsed timer and contextual hints — no more wondering if a large repo clone is still in progress.
+
+---
+
 ## Testing Plan
 
 The completed testing plan is in the repo root. Open either file directly after cloning:
